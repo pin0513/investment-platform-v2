@@ -8,16 +8,23 @@ Multi-asset portfolio platform. Supports TW/US stocks, ETFs, mutual funds, crypt
 
 **Server runs zero LLM calls.** AI-generated weekly reports come from Claude Code on the user's machine, uploaded via `POST /api/v1/reports` (P4+).
 
-## Architecture (P0)
+## Architecture (P0 + P1)
 
 Single FastAPI service on Cloud Run, region `asia-east1`. Backed by PostgreSQL 16 in shared `paulfun-postgres` container, DB `investment_v2`.
 
 ```
 /health              health check
 /auth/*              login / refresh / logout / me / google
-/api/v1/accounts     CRUD (audit logged)
-/api/v1/instruments  search + create + get
-/api/v1/admin/*      invite + service-token (admin only)
+/api/v1/accounts                                 CRUD (audit)
+/api/v1/instruments                              search + create + get
+/api/v1/instruments/{symbol}/quote               manual price upsert + read
+/api/v1/transactions                             CRUD + batch + reverse
+/api/v1/holdings                                 list + POST /recompute
+/api/v1/portfolio/summary                        net worth + breakdowns
+/api/v1/portfolio/by-class | by-account | by-industry
+/api/v1/exchange-rates/{base}/{quote}/{date}     manual rate upsert + lookup
+/api/v1/admin/*                                  invite + service-tokens
+/mcp                                             FastMCP server (Bearer JWT)
 ```
 
 ## Three auth modes, one JWT
@@ -29,6 +36,28 @@ Single FastAPI service on Cloud Run, region `asia-east1`. Backed by PostgreSQL 1
 | Cloud Scheduler | Long-lived service-account JWT minted via `/api/v1/admin/service-tokens` |
 
 All three go through `get_current_user` in `app/dependencies.py`.
+
+## MCP server (added in P1)
+
+Mounted at `/mcp`. Authentication is identical to the REST API:
+`Authorization: Bearer <jwt>` header on every request.
+
+Tools shipped in P1 (15 total):
+- list_accounts, create_account
+- search_instruments, add_instrument, get_instrument
+- list_transactions, add_transaction, batch_add_transactions, reverse_transaction, get_transaction
+- get_portfolio_summary, get_holdings, recompute_holdings
+- set_quote, set_exchange_rate
+
+Add this MCP server to Claude Code:
+
+```bash
+claude mcp add --transport http investment-v2 \
+  https://investment-platform-v2-yt3vv5n7za-de.a.run.app/mcp \
+  --header "Authorization: Bearer <your_access_token>"
+```
+
+See `docs/mcp-tools.md` for full parameter reference.
 
 ## Layout
 

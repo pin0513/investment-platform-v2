@@ -17,16 +17,26 @@ from app.routers import (
     auth as auth_router,
 )
 from app.routers import (
+    exchange_rates as exchange_rates_router,
+)
+from app.routers import (
     health,
+)
+from app.routers import (
+    holdings as holdings_router,
 )
 from app.routers import (
     instruments as instruments_router,
 )
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    yield
+from app.routers import (
+    portfolio as portfolio_router,
+)
+from app.routers import (
+    quotes as quotes_router,
+)
+from app.routers import (
+    transactions as transactions_router,
+)
 
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
@@ -40,6 +50,25 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+
+    # Build the FastMCP sub-app first so we can wire its lifespan into FastAPI.
+    # Must happen before the FastAPI lifespan is defined to capture the reference.
+    # The JWT middleware is installed inside build_http_app().
+    from app.mcp.server import build_http_app
+
+    mcp_http_app = build_http_app()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Run the MCP sub-app lifespan alongside the FastAPI lifespan so that
+        # FastMCP's StreamableHTTPSessionManager task group is initialized.
+        # FastMCP 3.x returns an app with a .lifespan attribute; 2.x does not.
+        if hasattr(mcp_http_app, "lifespan") and mcp_http_app.lifespan is not None:
+            async with mcp_http_app.lifespan(mcp_http_app):
+                yield
+        else:
+            yield
+
     app = FastAPI(
         title="Investment Platform v2",
         version="0.1.0",
@@ -62,6 +91,16 @@ def create_app() -> FastAPI:
     app.include_router(accounts_router.router)
     app.include_router(instruments_router.router)
     app.include_router(admin_router.router)
+    app.include_router(transactions_router.router)
+    app.include_router(holdings_router.router)
+    app.include_router(quotes_router.router)
+    app.include_router(exchange_rates_router.router)
+    app.include_router(portfolio_router.router)
+
+    # Mount the MCP sub-app at /mcp — must come after all include_router() calls.
+    # Endpoint inside the sub-app is "/" → full path is POST /mcp/.
+    app.mount("/mcp", mcp_http_app)
+
     return app
 
 

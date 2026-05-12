@@ -41,6 +41,52 @@ Auth: `Authorization: Bearer <jwt>` or `__session` cookie
 | POST | `/api/v1/admin/invite` | add email to allowlist |
 | POST | `/api/v1/admin/service-tokens` | mint long-lived JWT |
 
+### Transactions (auth required)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/v1/transactions?account_id=&instrument_id=&from=&to=&limit=` | list, newest first |
+| POST | `/api/v1/transactions` | create (immutable; reversal via /reverse) |
+| POST | `/api/v1/transactions/batch` | batch create (up to 200 items) |
+| GET | `/api/v1/transactions/{id}` | detail |
+| POST | `/api/v1/transactions/{id}/reverse` | append a REVERSAL row pointing at this txn |
+
+### Holdings (auth required)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/v1/holdings` | current materialized view |
+| POST | `/api/v1/holdings/recompute` | rebuild from the txn ledger |
+
+### Quotes (auth required)
+
+| Method | Path | Notes |
+|---|---|---|
+| PUT | `/api/v1/instruments/{symbol}/quote?market=` | upsert latest price (manual P1) |
+| GET | `/api/v1/instruments/{symbol}/quote?market=` | read last-known price |
+
+### Exchange Rates (auth required)
+
+| Method | Path | Notes |
+|---|---|---|
+| PUT | `/api/v1/exchange-rates/{base}/{quote}/{date}` | upsert rate (manual P1) |
+| GET | `/api/v1/exchange-rates/{base}/{quote}/{date}` | lookup; falls back to latest-on-or-before; falls back to inverse |
+
+### Portfolio (auth required)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/v1/portfolio/summary?ccy=` | total + per-holding valuation + all three group breakdowns |
+| GET | `/api/v1/portfolio/by-class?ccy=` | just the asset-class breakdown |
+| GET | `/api/v1/portfolio/by-account?ccy=` | just the account breakdown |
+| GET | `/api/v1/portfolio/by-industry?ccy=` | just the industry breakdown |
+
+### MCP
+
+| Method | Path | Notes |
+|---|---|---|
+| ANY | `/mcp/*` | FastMCP HTTP transport (Bearer JWT required) |
+
 ### Error format
 
 ```json

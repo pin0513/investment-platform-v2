@@ -10,9 +10,13 @@ from app.models import (  # noqa: F401
     account,
     allowlisted_email,
     audit_log,
+    exchange_rate,  # new
+    holding,  # new
     industry,
     instrument,
+    quote,  # new
     refresh_token,
+    transaction,  # new
     user,
 )
 from app.models.base import Base
