@@ -6,10 +6,22 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 TxnType = Literal[
-    "BUY", "SELL", "DIVIDEND", "SPLIT", "FEE", "TAX",
-    "DEPOSIT", "WITHDRAW", "TRANSFER_IN", "TRANSFER_OUT",
-    "STAKE", "UNSTAKE", "REWARD", "FX_CONVERT",
-    "ADJUSTMENT", "REVERSAL",
+    "BUY",
+    "SELL",
+    "DIVIDEND",
+    "SPLIT",
+    "FEE",
+    "TAX",
+    "DEPOSIT",
+    "WITHDRAW",
+    "TRANSFER_IN",
+    "TRANSFER_OUT",
+    "STAKE",
+    "UNSTAKE",
+    "REWARD",
+    "FX_CONVERT",
+    "ADJUSTMENT",
+    "REVERSAL",
 ]
 
 

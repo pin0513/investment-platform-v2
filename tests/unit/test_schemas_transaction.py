@@ -100,7 +100,7 @@ def test_transaction_out_from_orm():
         counter_account_id = None
         external_ref = None
         notes = None
-        metadata_json = {}
+        metadata_json: dict = {}  # noqa: RUF012
         created_at = datetime(2026, 5, 13)
         reversed_by = None
 

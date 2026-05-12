@@ -83,7 +83,7 @@ class TransactionService:
         if original.txn_type == "REVERSAL":
             raise TransactionAlreadyReversedError("Cannot reverse a reversal entry")
 
-        already = {tid for tid in self.repo.list_reversal_targets(original.account_id)}
+        already = self.repo.list_reversal_targets(original.account_id)
         if original.id in already:
             raise TransactionAlreadyReversedError(str(original.id))
 

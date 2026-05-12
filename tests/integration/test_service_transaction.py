@@ -27,10 +27,19 @@ def fixture_user_account(monkeypatch):
     user_id = uuid.uuid4()
     account_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=f"svc-{uuid.uuid4().hex[:8]}@x.z",
-                   slug=f"svc{uuid.uuid4().hex[:8]}", role="USER", is_active=True))
+        s.add(
+            User(
+                id=user_id,
+                email=f"svc-{uuid.uuid4().hex[:8]}@x.z",
+                slug=f"svc{uuid.uuid4().hex[:8]}",
+                role="USER",
+                is_active=True,
+            )
+        )
         s.flush()
-        s.add(Account(id=account_id, user_id=user_id, name="A", account_type="BANK", currency="TWD"))
+        s.add(
+            Account(id=account_id, user_id=user_id, name="A", account_type="BANK", currency="TWD")
+        )
     yield user_id, account_id
     with session_scope() as s:
         s.query(Transaction).filter(Transaction.user_id == user_id).delete()
@@ -77,7 +86,7 @@ def test_reverse_creates_mirror_row(fixture_user_account):
 
     with session_scope() as s:
         svc = TransactionService(s, _audit(s, user_id))
-        reversal = svc.reverse(user_id, original_id, reason="wrong account")
+        svc.reverse(user_id, original_id, reason="wrong account")
 
     with session_scope() as s:
         rows = s.query(Transaction).filter(Transaction.user_id == user_id).all()

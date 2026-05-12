@@ -22,6 +22,9 @@ from app.routers import (
 from app.routers import (
     instruments as instruments_router,
 )
+from app.routers import (
+    transactions as transactions_router,
+)
 
 
 @asynccontextmanager
@@ -62,6 +65,7 @@ def create_app() -> FastAPI:
     app.include_router(accounts_router.router)
     app.include_router(instruments_router.router)
     app.include_router(admin_router.router)
+    app.include_router(transactions_router.router)
     return app
 
 

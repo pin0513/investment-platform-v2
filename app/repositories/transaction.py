@@ -12,9 +12,7 @@ class TransactionRepository:
         self.s = session
 
     def get_for_user(self, user_id: uuid.UUID, txn_id: uuid.UUID) -> Transaction | None:
-        stmt = select(Transaction).where(
-            Transaction.id == txn_id, Transaction.user_id == user_id
-        )
+        stmt = select(Transaction).where(Transaction.id == txn_id, Transaction.user_id == user_id)
         return self.s.execute(stmt).scalar_one_or_none()
 
     def list_for_user(
