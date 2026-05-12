@@ -13,6 +13,7 @@ from app.models import (  # noqa: F401
     industry,
     instrument,
     refresh_token,
+    transaction,  # new
     user,
 )
 from app.models.base import Base
