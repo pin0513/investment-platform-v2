@@ -26,26 +26,61 @@ def auth_with_data(client):
     account_id = uuid.uuid4()
     inst_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=email,
-                   slug=f"pfapi{uuid.uuid4().hex[:8]}", role="USER",
-                   password_hash=hash_password("good-password"),
-                   base_currency="TWD", is_active=True))
+        s.add(
+            User(
+                id=user_id,
+                email=email,
+                slug=f"pfapi{uuid.uuid4().hex[:8]}",
+                role="USER",
+                password_hash=hash_password("good-password"),
+                base_currency="TWD",
+                is_active=True,
+            )
+        )
         s.flush()
-        s.add(Account(id=account_id, user_id=user_id, name="A",
-                      account_type="BROKER_STOCK", currency="TWD"))
-        s.add(Instrument(id=inst_id, symbol=f"PF{uuid.uuid4().hex[:6].upper()}",
-                         asset_class="STOCK", currency="TWD", market="TPE"))
+        s.add(
+            Account(
+                id=account_id,
+                user_id=user_id,
+                name="A",
+                account_type="BROKER_STOCK",
+                currency="TWD",
+            )
+        )
+        s.add(
+            Instrument(
+                id=inst_id,
+                symbol=f"PF{uuid.uuid4().hex[:6].upper()}",
+                asset_class="STOCK",
+                currency="TWD",
+                market="TPE",
+            )
+        )
         s.flush()
-        s.add(Holding(user_id=user_id, account_id=account_id, instrument_id=inst_id,
-                      quantity=Decimal("10"), avg_cost=Decimal("100"),
-                      cost_currency="TWD",
-                      opened_at=datetime(2026, 5, 1), last_txn_at=datetime(2026, 5, 1)))
-        s.add(Quote(instrument_id=inst_id, price=Decimal("150"),
-                    as_of=datetime.now(UTC), source="MANUAL"))
+        s.add(
+            Holding(
+                user_id=user_id,
+                account_id=account_id,
+                instrument_id=inst_id,
+                quantity=Decimal("10"),
+                avg_cost=Decimal("100"),
+                cost_currency="TWD",
+                opened_at=datetime(2026, 5, 1),
+                last_txn_at=datetime(2026, 5, 1),
+            )
+        )
+        s.add(
+            Quote(
+                instrument_id=inst_id,
+                price=Decimal("150"),
+                as_of=datetime.now(UTC),
+                source="MANUAL",
+            )
+        )
 
-    token = client.post("/auth/login",
-                        json={"email": email, "password": "good-password"}
-                        ).json()["access_token"]
+    token = client.post("/auth/login", json={"email": email, "password": "good-password"}).json()[
+        "access_token"
+    ]
     yield token, user_id, account_id, inst_id
     with session_scope() as s:
         s.query(Quote).filter(Quote.instrument_id == inst_id).delete()

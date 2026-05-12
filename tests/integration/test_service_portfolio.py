@@ -26,21 +26,56 @@ def populated():
     account_id = uuid.uuid4()
     inst_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=f"pf-{uuid.uuid4().hex[:8]}@x.z",
-                   slug=f"pf{uuid.uuid4().hex[:8]}", role="USER", is_active=True,
-                   base_currency="TWD"))
+        s.add(
+            User(
+                id=user_id,
+                email=f"pf-{uuid.uuid4().hex[:8]}@x.z",
+                slug=f"pf{uuid.uuid4().hex[:8]}",
+                role="USER",
+                is_active=True,
+                base_currency="TWD",
+            )
+        )
         s.flush()
-        s.add(Account(id=account_id, user_id=user_id, name="永豐",
-                      account_type="BROKER_STOCK", currency="TWD"))
-        s.add(Instrument(id=inst_id, symbol=f"TST{uuid.uuid4().hex[:6].upper()}",
-                         asset_class="STOCK", currency="TWD", market="TPE"))
+        s.add(
+            Account(
+                id=account_id,
+                user_id=user_id,
+                name="永豐",
+                account_type="BROKER_STOCK",
+                currency="TWD",
+            )
+        )
+        s.add(
+            Instrument(
+                id=inst_id,
+                symbol=f"TST{uuid.uuid4().hex[:6].upper()}",
+                asset_class="STOCK",
+                currency="TWD",
+                market="TPE",
+            )
+        )
         s.flush()
-        s.add(Holding(user_id=user_id, account_id=account_id, instrument_id=inst_id,
-                      quantity=Decimal("100"), avg_cost=Decimal("100"),
-                      cost_currency="TWD",
-                      opened_at=datetime(2026, 5, 1), last_txn_at=datetime(2026, 5, 1)))
-        s.add(Quote(instrument_id=inst_id, price=Decimal("150"),
-                    as_of=datetime.now(UTC), source="MANUAL"))
+        s.add(
+            Holding(
+                user_id=user_id,
+                account_id=account_id,
+                instrument_id=inst_id,
+                quantity=Decimal("100"),
+                avg_cost=Decimal("100"),
+                cost_currency="TWD",
+                opened_at=datetime(2026, 5, 1),
+                last_txn_at=datetime(2026, 5, 1),
+            )
+        )
+        s.add(
+            Quote(
+                instrument_id=inst_id,
+                price=Decimal("150"),
+                as_of=datetime.now(UTC),
+                source="MANUAL",
+            )
+        )
     yield user_id, account_id, inst_id
     with session_scope() as s:
         s.query(Quote).filter(Quote.instrument_id == inst_id).delete()
@@ -66,8 +101,15 @@ def test_summary_single_holding(populated):
 def test_summary_no_holdings():
     user_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=f"pfe-{uuid.uuid4().hex[:8]}@x.z",
-                   slug=f"pfe{uuid.uuid4().hex[:8]}", role="USER", is_active=True))
+        s.add(
+            User(
+                id=user_id,
+                email=f"pfe-{uuid.uuid4().hex[:8]}@x.z",
+                slug=f"pfe{uuid.uuid4().hex[:8]}",
+                role="USER",
+                is_active=True,
+            )
+        )
     try:
         with session_scope() as s:
             svc = PortfolioService(s, AuditWriter(s, request_id=None, actor_user_id=user_id))
@@ -85,24 +127,58 @@ def test_summary_cross_currency_via_fx():
     account_id = uuid.uuid4()
     inst_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=f"fx-{uuid.uuid4().hex[:8]}@x.z",
-                   slug=f"fx{uuid.uuid4().hex[:8]}", role="USER", is_active=True))
+        s.add(
+            User(
+                id=user_id,
+                email=f"fx-{uuid.uuid4().hex[:8]}@x.z",
+                slug=f"fx{uuid.uuid4().hex[:8]}",
+                role="USER",
+                is_active=True,
+            )
+        )
         s.flush()
-        s.add(Account(id=account_id, user_id=user_id, name="Firstrade",
-                      account_type="BROKER_STOCK", currency="USD"))
-        s.add(Instrument(id=inst_id, symbol=f"US{uuid.uuid4().hex[:6].upper()}",
-                         asset_class="STOCK", currency="USD", market="NASDAQ"))
+        s.add(
+            Account(
+                id=account_id,
+                user_id=user_id,
+                name="Firstrade",
+                account_type="BROKER_STOCK",
+                currency="USD",
+            )
+        )
+        s.add(
+            Instrument(
+                id=inst_id,
+                symbol=f"US{uuid.uuid4().hex[:6].upper()}",
+                asset_class="STOCK",
+                currency="USD",
+                market="NASDAQ",
+            )
+        )
         s.flush()
-        s.add(Holding(user_id=user_id, account_id=account_id, instrument_id=inst_id,
-                      quantity=Decimal("10"), avg_cost=Decimal("100"),
-                      cost_currency="USD",
-                      opened_at=datetime(2026, 5, 1), last_txn_at=datetime(2026, 5, 1)))
-        s.add(Quote(instrument_id=inst_id, price=Decimal("180"),
-                    as_of=datetime.now(UTC)))
+        s.add(
+            Holding(
+                user_id=user_id,
+                account_id=account_id,
+                instrument_id=inst_id,
+                quantity=Decimal("10"),
+                avg_cost=Decimal("100"),
+                cost_currency="USD",
+                opened_at=datetime(2026, 5, 1),
+                last_txn_at=datetime(2026, 5, 1),
+            )
+        )
+        s.add(Quote(instrument_id=inst_id, price=Decimal("180"), as_of=datetime.now(UTC)))
         # FX rate USD -> TWD = 30
-        s.merge(ExchangeRate(base_currency="USD", quote_currency="TWD",
-                             date=datetime.now(UTC).date(), rate=Decimal("30"),
-                             source="MANUAL"))
+        s.merge(
+            ExchangeRate(
+                base_currency="USD",
+                quote_currency="TWD",
+                date=datetime.now(UTC).date(),
+                rate=Decimal("30"),
+                source="MANUAL",
+            )
+        )
 
     try:
         with session_scope() as s:

@@ -29,10 +29,10 @@ from app.routers import (
     instruments as instruments_router,
 )
 from app.routers import (
-    quotes as quotes_router,
+    portfolio as portfolio_router,
 )
 from app.routers import (
-    portfolio as portfolio_router,
+    quotes as quotes_router,
 )
 from app.routers import (
     transactions as transactions_router,

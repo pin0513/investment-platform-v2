@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from datetime import UTC, date as date_t, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -39,27 +39,29 @@ class PortfolioService:
         holdings = self.holdings.list_for_user(user_id)
         if not holdings:
             return PortfolioSummary(
-                base_currency=base_ccy, total_value=Decimal("0"), as_of=now,
-                by_asset_class=[], by_account=[], by_industry=[],
-                holdings=[], stale_count=0,
+                base_currency=base_ccy,
+                total_value=Decimal("0"),
+                as_of=now,
+                by_asset_class=[],
+                by_account=[],
+                by_industry=[],
+                holdings=[],
+                stale_count=0,
             )
 
         instrument_ids = [h.instrument_id for h in holdings]
         instruments_map = {
-            i.id: i for i in self.s.execute(
+            i.id: i
+            for i in self.s.execute(
                 select(Instrument).where(Instrument.id.in_(instrument_ids))
             ).scalars()
         }
         account_ids = list({h.account_id for h in holdings})
         accounts_map = {
-            a.id: a for a in self.s.execute(
-                select(Account).where(Account.id.in_(account_ids))
-            ).scalars()
+            a.id: a
+            for a in self.s.execute(select(Account).where(Account.id.in_(account_ids))).scalars()
         }
-        quotes_map = {
-            q.instrument_id: q
-            for q in self.quotes.list_by_instruments(instrument_ids)
-        }
+        quotes_map = {q.instrument_id: q for q in self.quotes.list_by_instruments(instrument_ids)}
 
         valuations: list[HoldingValuation] = []
         for h in holdings:
@@ -93,17 +95,25 @@ class PortfolioService:
             else:
                 unrealized = None
 
-            valuations.append(HoldingValuation(
-                account_id=acc.id, account_name=acc.name,
-                instrument_id=inst.id, symbol=inst.symbol,
-                instrument_name=inst.name, asset_class=inst.asset_class,
-                industry_id=inst.industry_id, currency=inst.currency,
-                quantity=h.quantity, avg_cost=h.avg_cost,
-                last_price=last_price, value_in_native=value_in_native,
-                value_in_base=value_in_base,
-                unrealized_pnl_in_base=unrealized,
-                stale=stale,
-            ))
+            valuations.append(
+                HoldingValuation(
+                    account_id=acc.id,
+                    account_name=acc.name,
+                    instrument_id=inst.id,
+                    symbol=inst.symbol,
+                    instrument_name=inst.name,
+                    asset_class=inst.asset_class,
+                    industry_id=inst.industry_id,
+                    currency=inst.currency,
+                    quantity=h.quantity,
+                    avg_cost=h.avg_cost,
+                    last_price=last_price,
+                    value_in_native=value_in_native,
+                    value_in_base=value_in_base,
+                    unrealized_pnl_in_base=unrealized,
+                    stale=stale,
+                )
+            )
 
         total = sum(
             (v.value_in_base for v in valuations if v.value_in_base is not None),
@@ -122,10 +132,14 @@ class PortfolioService:
             groups = []
             for label, data in agg.items():
                 pct = float(data["value"] / total * 100) if total > 0 else 0.0
-                groups.append(GroupValue(
-                    label=label, value=data["value"], pct=round(pct, 2),
-                    count=data["count"],
-                ))
+                groups.append(
+                    GroupValue(
+                        label=label,
+                        value=data["value"],
+                        pct=round(pct, 2),
+                        count=data["count"],
+                    )
+                )
             return sorted(groups, key=lambda g: g.value, reverse=True)
 
         by_class = _group(lambda v: v.asset_class)
