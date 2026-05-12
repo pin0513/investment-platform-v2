@@ -1,7 +1,9 @@
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import get_settings
 from app.routers import auth as auth_router, health
@@ -10,6 +12,15 @@ from app.routers import auth as auth_router, health
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
+
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        rid = request.headers.get("x-request-id") or str(uuid.uuid4())
+        request.state.request_id = rid
+        response = await call_next(request)
+        response.headers["x-request-id"] = rid
+        return response
 
 
 def create_app() -> FastAPI:
@@ -27,6 +38,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(RequestIdMiddleware)
 
     app.include_router(health.router)
     app.include_router(auth_router.router)
