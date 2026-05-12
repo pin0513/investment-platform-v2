@@ -39,11 +39,6 @@ from app.routers import (
 )
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    yield
-
-
 class RequestIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         rid = request.headers.get("x-request-id") or str(uuid.uuid4())
@@ -55,6 +50,21 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+
+    # Build the FastMCP sub-app first so we can wire its lifespan into FastAPI.
+    # Must happen before the FastAPI lifespan is defined to capture the reference.
+    # The JWT middleware is installed inside build_http_app().
+    from app.mcp.server import build_http_app
+
+    mcp_http_app = build_http_app()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Run the MCP sub-app lifespan alongside the FastAPI lifespan so that
+        # FastMCP's StreamableHTTPSessionManager task group is initialized.
+        async with mcp_http_app.lifespan(mcp_http_app):
+            yield
+
     app = FastAPI(
         title="Investment Platform v2",
         version="0.1.0",
@@ -82,6 +92,11 @@ def create_app() -> FastAPI:
     app.include_router(quotes_router.router)
     app.include_router(exchange_rates_router.router)
     app.include_router(portfolio_router.router)
+
+    # Mount the MCP sub-app at /mcp — must come after all include_router() calls.
+    # Endpoint inside the sub-app is "/" → full path is POST /mcp/.
+    app.mount("/mcp", mcp_http_app)
+
     return app
 
 
