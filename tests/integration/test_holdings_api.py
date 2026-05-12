@@ -27,16 +27,38 @@ def auth_setup(client):
     account_id = uuid.uuid4()
     instrument_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=email, slug=slug, role="USER",
-                   password_hash=hash_password("good-password"), is_active=True))
+        s.add(
+            User(
+                id=user_id,
+                email=email,
+                slug=slug,
+                role="USER",
+                password_hash=hash_password("good-password"),
+                is_active=True,
+            )
+        )
         s.flush()
-        s.add(Account(id=account_id, user_id=user_id, name="A",
-                      account_type="BROKER_STOCK", currency="TWD"))
-        s.add(Instrument(id=instrument_id, symbol=f"TST{uuid.uuid4().hex[:6].upper()}",
-                         asset_class="STOCK", currency="TWD", market="TPE"))
-    token = client.post("/auth/login",
-                        json={"email": email, "password": "good-password"}
-                        ).json()["access_token"]
+        s.add(
+            Account(
+                id=account_id,
+                user_id=user_id,
+                name="A",
+                account_type="BROKER_STOCK",
+                currency="TWD",
+            )
+        )
+        s.add(
+            Instrument(
+                id=instrument_id,
+                symbol=f"TST{uuid.uuid4().hex[:6].upper()}",
+                asset_class="STOCK",
+                currency="TWD",
+                market="TPE",
+            )
+        )
+    token = client.post("/auth/login", json={"email": email, "password": "good-password"}).json()[
+        "access_token"
+    ]
     yield token, account_id, instrument_id, user_id
     with session_scope() as s:
         s.query(Holding).filter(Holding.user_id == user_id).delete()
@@ -47,7 +69,8 @@ def auth_setup(client):
         s.query(User).filter(User.id == user_id).delete()
 
 
-def _h(t): return {"Authorization": f"Bearer {t}"}
+def _h(t):
+    return {"Authorization": f"Bearer {t}"}
 
 
 def test_recompute_then_list(client, auth_setup):
@@ -55,13 +78,20 @@ def test_recompute_then_list(client, auth_setup):
 
     # Add 2 BUY txns
     for qty, price in [(100, "100"), (50, "120")]:
-        r = client.post("/api/v1/transactions", json={
-            "account_id": str(account_id), "instrument_id": str(instrument_id),
-            "txn_type": "BUY",
-            "occurred_at": datetime(2026, 5, 1, tzinfo=UTC).isoformat(),
-            "quantity": str(qty), "price": price,
-            "amount": str(qty * int(price)), "currency": "TWD",
-        }, headers=_h(token))
+        r = client.post(
+            "/api/v1/transactions",
+            json={
+                "account_id": str(account_id),
+                "instrument_id": str(instrument_id),
+                "txn_type": "BUY",
+                "occurred_at": datetime(2026, 5, 1, tzinfo=UTC).isoformat(),
+                "quantity": str(qty),
+                "price": price,
+                "amount": str(qty * int(price)),
+                "currency": "TWD",
+            },
+            headers=_h(token),
+        )
         assert r.status_code == 201
 
     # Recompute

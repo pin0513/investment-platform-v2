@@ -40,7 +40,7 @@ def test_fold_weighted_avg_two_buys():
     delta = fold_transactions(
         [
             _txn(datetime(2026, 5, 1), "BUY", qty=100, amount=10000),  # 100 @ 100
-            _txn(datetime(2026, 5, 5), "BUY", qty=50, amount=6000),    # 50  @ 120
+            _txn(datetime(2026, 5, 5), "BUY", qty=50, amount=6000),  # 50  @ 120
         ]
     )
     # weighted: (10000 + 6000) / 150 = 106.666...

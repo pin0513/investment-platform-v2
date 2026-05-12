@@ -13,20 +13,14 @@ class HoldingRepository:
         self.s = session
 
     def list_for_user(self, user_id: uuid.UUID) -> list[Holding]:
-        stmt = select(Holding).where(
-            Holding.user_id == user_id, Holding.deleted_at.is_(None)
-        )
+        stmt = select(Holding).where(Holding.user_id == user_id, Holding.deleted_at.is_(None))
         return list(self.s.execute(stmt).scalars())
 
     def list_for_account(self, account_id: uuid.UUID) -> list[Holding]:
-        stmt = select(Holding).where(
-            Holding.account_id == account_id, Holding.deleted_at.is_(None)
-        )
+        stmt = select(Holding).where(Holding.account_id == account_id, Holding.deleted_at.is_(None))
         return list(self.s.execute(stmt).scalars())
 
-    def get(
-        self, account_id: uuid.UUID, instrument_id: uuid.UUID
-    ) -> Holding | None:
+    def get(self, account_id: uuid.UUID, instrument_id: uuid.UUID) -> Holding | None:
         stmt = select(Holding).where(
             Holding.account_id == account_id,
             Holding.instrument_id == instrument_id,
@@ -54,7 +48,9 @@ class HoldingRepository:
         existing = self.s.execute(stmt).scalar_one_or_none()
         if existing is None:
             existing = Holding(
-                user_id=user_id, account_id=account_id, instrument_id=instrument_id,
+                user_id=user_id,
+                account_id=account_id,
+                instrument_id=instrument_id,
             )
             self.s.add(existing)
         existing.quantity = quantity

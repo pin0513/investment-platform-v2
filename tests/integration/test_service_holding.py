@@ -27,13 +27,34 @@ def fixture():
     account_id = uuid.uuid4()
     instrument_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(id=user_id, email=f"hs-{uuid.uuid4().hex[:8]}@x.z",
-                   slug=f"hs{uuid.uuid4().hex[:8]}", role="USER", is_active=True))
+        s.add(
+            User(
+                id=user_id,
+                email=f"hs-{uuid.uuid4().hex[:8]}@x.z",
+                slug=f"hs{uuid.uuid4().hex[:8]}",
+                role="USER",
+                is_active=True,
+            )
+        )
         s.flush()
-        s.add(Account(id=account_id, user_id=user_id, name="A",
-                      account_type="BROKER_STOCK", currency="TWD"))
-        s.add(Instrument(id=instrument_id, symbol=f"TST{uuid.uuid4().hex[:6].upper()}",
-                         asset_class="STOCK", currency="TWD", market="TPE"))
+        s.add(
+            Account(
+                id=account_id,
+                user_id=user_id,
+                name="A",
+                account_type="BROKER_STOCK",
+                currency="TWD",
+            )
+        )
+        s.add(
+            Instrument(
+                id=instrument_id,
+                symbol=f"TST{uuid.uuid4().hex[:6].upper()}",
+                asset_class="STOCK",
+                currency="TWD",
+                market="TPE",
+            )
+        )
     yield user_id, account_id, instrument_id
     with session_scope() as s:
         s.query(Holding).filter(Holding.user_id == user_id).delete()
@@ -51,18 +72,32 @@ def test_recompute_buy_then_sell(fixture):
     user_id, account_id, instrument_id = fixture
     with session_scope() as s:
         txn_svc = TransactionService(s, _audit(s, user_id))
-        txn_svc.create(user_id, TransactionCreate(
-            account_id=account_id, instrument_id=instrument_id,
-            txn_type="BUY", occurred_at=datetime(2026, 5, 1),
-            quantity=Decimal("100"), price=Decimal("100"),
-            amount=Decimal("10000"), currency="TWD",
-        ))
-        txn_svc.create(user_id, TransactionCreate(
-            account_id=account_id, instrument_id=instrument_id,
-            txn_type="SELL", occurred_at=datetime(2026, 5, 10),
-            quantity=Decimal("40"), price=Decimal("110"),
-            amount=Decimal("4400"), currency="TWD",
-        ))
+        txn_svc.create(
+            user_id,
+            TransactionCreate(
+                account_id=account_id,
+                instrument_id=instrument_id,
+                txn_type="BUY",
+                occurred_at=datetime(2026, 5, 1),
+                quantity=Decimal("100"),
+                price=Decimal("100"),
+                amount=Decimal("10000"),
+                currency="TWD",
+            ),
+        )
+        txn_svc.create(
+            user_id,
+            TransactionCreate(
+                account_id=account_id,
+                instrument_id=instrument_id,
+                txn_type="SELL",
+                occurred_at=datetime(2026, 5, 10),
+                quantity=Decimal("40"),
+                price=Decimal("110"),
+                amount=Decimal("4400"),
+                currency="TWD",
+            ),
+        )
 
     with session_scope() as s:
         h_svc = HoldingService(s, _audit(s, user_id))
@@ -81,12 +116,19 @@ def test_recompute_excludes_reversed(fixture):
     user_id, account_id, instrument_id = fixture
     with session_scope() as s:
         txn_svc = TransactionService(s, _audit(s, user_id))
-        orig = txn_svc.create(user_id, TransactionCreate(
-            account_id=account_id, instrument_id=instrument_id,
-            txn_type="BUY", occurred_at=datetime(2026, 5, 1),
-            quantity=Decimal("100"), price=Decimal("100"),
-            amount=Decimal("10000"), currency="TWD",
-        ))
+        orig = txn_svc.create(
+            user_id,
+            TransactionCreate(
+                account_id=account_id,
+                instrument_id=instrument_id,
+                txn_type="BUY",
+                occurred_at=datetime(2026, 5, 1),
+                quantity=Decimal("100"),
+                price=Decimal("100"),
+                amount=Decimal("10000"),
+                currency="TWD",
+            ),
+        )
         orig_id = orig.id
 
     with session_scope() as s:
@@ -98,8 +140,8 @@ def test_recompute_excludes_reversed(fixture):
         h_svc.recompute_for_user(user_id)
 
     with session_scope() as s:
-        rows = s.query(Holding).filter(
-            Holding.user_id == user_id, Holding.deleted_at.is_(None)
-        ).all()
+        rows = (
+            s.query(Holding).filter(Holding.user_id == user_id, Holding.deleted_at.is_(None)).all()
+        )
         # No surviving holdings, or quantity = 0
         assert all(r.quantity == Decimal("0") for r in rows) or len(rows) == 0

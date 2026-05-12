@@ -90,9 +90,7 @@ class HoldingService:
 
     def recompute_for_user(self, user_id: uuid.UUID) -> dict[str, int]:
         accounts = self.s.execute(
-            select(Account).where(
-                Account.user_id == user_id, Account.deleted_at.is_(None)
-            )
+            select(Account).where(Account.user_id == user_id, Account.deleted_at.is_(None))
         ).scalars()
         touched = 0
         for acc in accounts:
@@ -108,15 +106,16 @@ class HoldingService:
         # 1) gather all transactions for this account, grouped by instrument_id
         all_txns = list(
             self.s.execute(
-                select(Transaction).where(Transaction.account_id == account_id).order_by(
-                    Transaction.occurred_at, Transaction.created_at
-                )
+                select(Transaction)
+                .where(Transaction.account_id == account_id)
+                .order_by(Transaction.occurred_at, Transaction.created_at)
             ).scalars()
         )
 
         # 2) find reversal targets (txn ids that have a REVERSAL pointing at them)
         reversed_ids = {
-            t.reversed_by for t in all_txns
+            t.reversed_by
+            for t in all_txns
             if t.txn_type == "REVERSAL" and t.reversed_by is not None
         }
 

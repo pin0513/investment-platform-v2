@@ -20,13 +20,13 @@ from app.routers import (
     health,
 )
 from app.routers import (
+    holdings as holdings_router,
+)
+from app.routers import (
     instruments as instruments_router,
 )
 from app.routers import (
     transactions as transactions_router,
-)
-from app.routers import (
-    holdings as holdings_router,
 )
 
 
