@@ -26,6 +26,9 @@ from app.routers import (
     instruments as instruments_router,
 )
 from app.routers import (
+    quotes as quotes_router,
+)
+from app.routers import (
     transactions as transactions_router,
 )
 
@@ -70,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_router.router)
     app.include_router(transactions_router.router)
     app.include_router(holdings_router.router)
+    app.include_router(quotes_router.router)
     return app
 
 
