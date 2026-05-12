@@ -1,0 +1,34 @@
+[project]
+name = "investment-platform-v2"
+version = "0.1.0"
+description = "Multi-asset portfolio platform with AI integration"
+requires-python = ">=3.13"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+  "E501",  # line length handled by formatter
+  "UP007", # keep Optional/Union for Python 3.9 local-dev compat
+  "UP045", # keep Optional[X] for Python 3.9 local-dev compat
+  "UP035", # don't rewrite typing.X deprecated aliases (would force X | None)
+]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+exclude = ["tests/", "alembic/"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["passlib.*", "jose.*", "google.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers --cov=app --cov-report=term-missing"

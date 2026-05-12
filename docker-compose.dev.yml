@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: investment_user
+      POSTGRES_PASSWORD: dev_pw
+      POSTGRES_DB: investment_v2
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_URL: postgresql+psycopg://investment_user:dev_pw@db:5432/investment_v2
+      JWT_SECRET: dev_secret_at_least_32_chars_long_xxxxxxxx
+      GOOGLE_OAUTH_CLIENT_ID: dev-client.apps.googleusercontent.com
+      ENVIRONMENT: dev
+    ports:
+      - "8080:8080"
+
+volumes:
+  pg_data:

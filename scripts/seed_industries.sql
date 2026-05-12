@@ -1,0 +1,35 @@
+-- Idempotent seed for `industries` table.
+-- Safe to run multiple times.
+
+INSERT INTO industries (id, code, name_zh, name_en, market_group, metadata) VALUES
+  (gen_random_uuid(), 'SEMICONDUCTOR',     '半導體',       'Semiconductor',         'TECH',     '{}'),
+  (gen_random_uuid(), 'TECH_HARDWARE',     '科技硬體',     'Tech Hardware',         'TECH',     '{}'),
+  (gen_random_uuid(), 'SOFTWARE',          '軟體',         'Software',              'TECH',     '{}'),
+  (gen_random_uuid(), 'INTERNET',          '網際網路',     'Internet',              'TECH',     '{}'),
+  (gen_random_uuid(), 'AI_INFRA',          'AI 基礎建設',  'AI Infrastructure',     'TECH',     '{}'),
+  (gen_random_uuid(), 'FINANCE',           '金融',         'Finance',               'FINANCE',  '{}'),
+  (gen_random_uuid(), 'BANKING',           '銀行',         'Banking',               'FINANCE',  '{}'),
+  (gen_random_uuid(), 'INSURANCE',         '保險',         'Insurance',             'FINANCE',  '{}'),
+  (gen_random_uuid(), 'REIT',              'REIT',         'REIT',                  'FINANCE',  '{}'),
+  (gen_random_uuid(), 'HEALTHCARE',        '醫療保健',     'Healthcare',            'HEALTH',   '{}'),
+  (gen_random_uuid(), 'BIOTECH',           '生技',         'Biotechnology',         'HEALTH',   '{}'),
+  (gen_random_uuid(), 'PHARMA',            '製藥',         'Pharmaceuticals',       'HEALTH',   '{}'),
+  (gen_random_uuid(), 'ENERGY',            '能源',         'Energy',                'ENERGY',   '{}'),
+  (gen_random_uuid(), 'UTILITIES',         '公用事業',     'Utilities',             'ENERGY',   '{}'),
+  (gen_random_uuid(), 'INDUSTRIALS',       '工業',         'Industrials',           'INDUSTRY', '{}'),
+  (gen_random_uuid(), 'MATERIALS',         '原物料',       'Materials',             'INDUSTRY', '{}'),
+  (gen_random_uuid(), 'CONSUMER_DISC',     '非必需消費',   'Consumer Discretionary','CONSUMER', '{}'),
+  (gen_random_uuid(), 'CONSUMER_STAPLES',  '必需消費',     'Consumer Staples',      'CONSUMER', '{}'),
+  (gen_random_uuid(), 'AUTO',              '汽車',         'Automotive',            'CONSUMER', '{}'),
+  (gen_random_uuid(), 'TELECOM',           '電信',         'Telecommunications',    'TELECOM',  '{}'),
+  (gen_random_uuid(), 'MEDIA',             '媒體娛樂',     'Media & Entertainment', 'TELECOM',  '{}'),
+  (gen_random_uuid(), 'REAL_ESTATE',       '房地產',       'Real Estate',           'RE',       '{}'),
+  (gen_random_uuid(), 'TRANSPORTATION',    '運輸',         'Transportation',        'INDUSTRY', '{}'),
+  (gen_random_uuid(), 'AEROSPACE',         '航太國防',     'Aerospace & Defense',   'INDUSTRY', '{}'),
+  (gen_random_uuid(), 'CRYPTO_NATIVE',     '加密原生',     'Crypto Native',         'CRYPTO',   '{}'),
+  (gen_random_uuid(), 'GOLD_PRECIOUS',     '黃金與貴金屬', 'Gold & Precious Metals','COMMODITY','{}'),
+  (gen_random_uuid(), 'FX',                '外匯',         'Foreign Exchange',      'FX',       '{}'),
+  (gen_random_uuid(), 'GOVT_BOND',         '政府公債',     'Government Bonds',      'BOND',     '{}'),
+  (gen_random_uuid(), 'CORP_BOND',         '公司債',       'Corporate Bonds',       'BOND',     '{}'),
+  (gen_random_uuid(), 'CASH_EQUIV',        '現金等價物',   'Cash & Equivalents',    'CASH',     '{}')
+ON CONFLICT (code) DO NOTHING;

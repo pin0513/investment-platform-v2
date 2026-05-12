@@ -1,0 +1,28 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag=asia-east1-docker.pkg.dev/$PROJECT_ID/investment-platform-v2/app:$SHORT_SHA
+      - --tag=asia-east1-docker.pkg.dev/$PROJECT_ID/investment-platform-v2/app:latest
+      - .
+
+  - id: push-sha
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - asia-east1-docker.pkg.dev/$PROJECT_ID/investment-platform-v2/app:$SHORT_SHA
+
+  - id: push-latest
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - asia-east1-docker.pkg.dev/$PROJECT_ID/investment-platform-v2/app:latest
+
+images:
+  - asia-east1-docker.pkg.dev/$PROJECT_ID/investment-platform-v2/app:$SHORT_SHA
+  - asia-east1-docker.pkg.dev/$PROJECT_ID/investment-platform-v2/app:latest
