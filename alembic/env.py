@@ -13,7 +13,9 @@ from app.models import (  # noqa: F401
     industry,
     instrument,
     refresh_token,
+    exchange_rate,  # new
     holding,  # new
+    quote,  # new
     transaction,  # new
     user,
 )
