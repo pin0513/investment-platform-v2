@@ -26,6 +26,9 @@ from app.routers import (
     instruments as instruments_router,
 )
 from app.routers import (
+    exchange_rates as exchange_rates_router,
+)
+from app.routers import (
     quotes as quotes_router,
 )
 from app.routers import (
@@ -74,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(transactions_router.router)
     app.include_router(holdings_router.router)
     app.include_router(quotes_router.router)
+    app.include_router(exchange_rates_router.router)
     return app
 
 
