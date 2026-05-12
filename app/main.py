@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app import errors
 from app.config import get_settings
 from app.routers import auth as auth_router, health
 
@@ -39,6 +40,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(RequestIdMiddleware)
+
+    errors.install(app)
 
     app.include_router(health.router)
     app.include_router(auth_router.router)
