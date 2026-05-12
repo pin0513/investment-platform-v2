@@ -4,10 +4,25 @@ from app.models.transaction import Transaction
 def test_transaction_table_columns():
     cols = {c.name for c in Transaction.__table__.columns}
     expected = {
-        "id", "user_id", "account_id", "instrument_id", "txn_type",
-        "occurred_at", "quantity", "price", "amount", "fee", "tax",
-        "currency", "fx_rate_to_base", "counter_account_id", "external_ref",
-        "notes", "metadata", "created_at", "reversed_by",
+        "id",
+        "user_id",
+        "account_id",
+        "instrument_id",
+        "txn_type",
+        "occurred_at",
+        "quantity",
+        "price",
+        "amount",
+        "fee",
+        "tax",
+        "currency",
+        "fx_rate_to_base",
+        "counter_account_id",
+        "external_ref",
+        "notes",
+        "metadata",
+        "created_at",
+        "reversed_by",
     }
     assert expected.issubset(cols), expected - cols
 

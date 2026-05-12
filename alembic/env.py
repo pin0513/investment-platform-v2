@@ -10,12 +10,12 @@ from app.models import (  # noqa: F401
     account,
     allowlisted_email,
     audit_log,
-    industry,
-    instrument,
-    refresh_token,
     exchange_rate,  # new
     holding,  # new
+    industry,
+    instrument,
     quote,  # new
+    refresh_token,
     transaction,  # new
     user,
 )

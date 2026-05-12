@@ -4,10 +4,20 @@ from app.models.holding import Holding
 def test_holding_table_columns():
     cols = {c.name for c in Holding.__table__.columns}
     expected = {
-        "id", "user_id", "account_id", "instrument_id",
-        "quantity", "avg_cost", "cost_currency",
-        "opened_at", "last_txn_at", "notes", "metadata",
-        "created_at", "updated_at", "deleted_at",
+        "id",
+        "user_id",
+        "account_id",
+        "instrument_id",
+        "quantity",
+        "avg_cost",
+        "cost_currency",
+        "opened_at",
+        "last_txn_at",
+        "notes",
+        "metadata",
+        "created_at",
+        "updated_at",
+        "deleted_at",
     }
     assert expected.issubset(cols), expected - cols
 

@@ -31,7 +31,9 @@ class Transaction(Base):
         UUID(as_uuid=True), ForeignKey("instruments.id"), nullable=True, index=True
     )
     txn_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
-    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
     quantity: Mapped[Decimal | None] = mapped_column(Numeric(28, 8), nullable=True)
     price: Mapped[Decimal | None] = mapped_column(Numeric(28, 8), nullable=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(28, 8), nullable=False)
