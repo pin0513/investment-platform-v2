@@ -40,3 +40,9 @@ curl -s -X POST "$BASE/api/v1/instruments" \
 - Don't bypass `get_current_user`
 - Don't mutate `holdings` directly — that's a materialized view from `transactions` (P1 onward)
 - Don't store credentials in this repo
+
+## MCP (P1)
+
+The MCP server at `/mcp` accepts the same Bearer JWT. For a programmatic
+client without Claude Code, use the `mcp` Python SDK directly. See
+`docs/mcp-tools.md` for tool listings.
