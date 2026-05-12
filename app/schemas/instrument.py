@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,7 +13,7 @@ class InstrumentCreate(BaseModel):
     currency: str = Field(min_length=3, max_length=3)
     market: Optional[str] = Field(default=None, max_length=16)
     industry_id: Optional[uuid.UUID] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class InstrumentOut(BaseModel):
@@ -27,4 +27,4 @@ class InstrumentOut(BaseModel):
     market: Optional[str]
     industry_id: Optional[uuid.UUID]
     is_active: bool
-    metadata: Dict[str, Any] = Field(validation_alias="metadata_json")
+    metadata: dict[str, Any] = Field(validation_alias="metadata_json")

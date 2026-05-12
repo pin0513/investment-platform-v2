@@ -17,12 +17,12 @@ from pathlib import Path
 # Resolve the alembic binary from the same Python installation running this script.
 _ALEMBIC = str(Path(sys.executable).parent / "alembic")
 
-from sqlalchemy import text
+from sqlalchemy import text  # noqa: E402
 
-from app.config import get_settings
-from app.db import session_scope
-from app.models.allowlisted_email import AllowlistedEmail
-from app.models.user import User
+from app.config import get_settings  # noqa: E402
+from app.db import session_scope  # noqa: E402
+from app.models.allowlisted_email import AllowlistedEmail  # noqa: E402
+from app.models.user import User  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger("init_db")
@@ -30,9 +30,7 @@ log = logging.getLogger("init_db")
 
 def run_alembic() -> None:
     log.info("Running alembic upgrade head...")
-    result = subprocess.run(
-        [_ALEMBIC, "upgrade", "head"], capture_output=True, text=True
-    )
+    result = subprocess.run([_ALEMBIC, "upgrade", "head"], capture_output=True, text=True)
     if result.returncode != 0:
         log.error("alembic failed: %s", result.stderr)
         sys.exit(1)

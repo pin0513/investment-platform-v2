@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 
 from jose import jwt
@@ -31,8 +31,10 @@ def create_access_token(
     expires_in_minutes: Optional[int] = None,
 ) -> str:
     settings = get_settings()
-    now = datetime.now(timezone.utc)
-    minutes = expires_in_minutes if expires_in_minutes is not None else settings.access_token_minutes
+    now = datetime.now(UTC)
+    minutes = (
+        expires_in_minutes if expires_in_minutes is not None else settings.access_token_minutes
+    )
     claims: dict[str, Any] = {
         "sub": subject,
         "email": email,

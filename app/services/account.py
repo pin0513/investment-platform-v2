@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import builtins
 import uuid
-from typing import Any, Dict, List
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -21,7 +22,7 @@ class AccountService:
         self.repo = AccountRepository(session)
         self.audit = audit
 
-    def list(self, user_id: uuid.UUID) -> List[Account]:
+    def list(self, user_id: uuid.UUID) -> builtins.list[Account]:
         return self.repo.list_for_user(user_id)
 
     def get(self, user_id: uuid.UUID, account_id: uuid.UUID) -> Account:
@@ -56,11 +57,9 @@ class AccountService:
         )
         return acc
 
-    def update(
-        self, user_id: uuid.UUID, account_id: uuid.UUID, payload: AccountUpdate
-    ) -> Account:
+    def update(self, user_id: uuid.UUID, account_id: uuid.UUID, payload: AccountUpdate) -> Account:
         acc = self.get(user_id, account_id)
-        before: Dict[str, Any] = {
+        before: dict[str, Any] = {
             "name": acc.name,
             "provider": acc.provider,
             "currency": acc.currency,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
 from sqlalchemy import select
@@ -41,11 +41,11 @@ class RefreshTokenRepository:
     def revoke(self, token_id: uuid.UUID) -> None:
         rt = self.s.get(RefreshToken, token_id)
         if rt:
-            rt.revoked_at = datetime.now(timezone.utc)
+            rt.revoked_at = datetime.now(UTC)
 
     def revoke_all_for_user(self, user_id: uuid.UUID) -> None:
         stmt = select(RefreshToken).where(
             RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None)
         )
         for rt in self.s.execute(stmt).scalars():
-            rt.revoked_at = datetime.now(timezone.utc)
+            rt.revoked_at = datetime.now(UTC)

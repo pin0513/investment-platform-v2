@@ -4,7 +4,7 @@ import ipaddress
 import uuid
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from app.db import get_db

@@ -21,11 +21,13 @@ def get_engine() -> Engine:
             "echo": settings.environment == "dev",
         }
         if "sqlite" not in settings.db_url:
-            engine_kwargs.update({
-                "pool_pre_ping": True,
-                "pool_size": 5,
-                "max_overflow": 5,
-            })
+            engine_kwargs.update(
+                {
+                    "pool_pre_ping": True,
+                    "pool_size": 5,
+                    "max_overflow": 5,
+                }
+            )
 
         _engine = create_engine(settings.db_url, **engine_kwargs)
         _SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False)

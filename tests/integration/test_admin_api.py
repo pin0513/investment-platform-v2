@@ -27,9 +27,9 @@ def admin_token(client):
         s.add(u)
         s.commit()
         email = u.email
-    return client.post(
-        "/auth/login", json={"email": email, "password": "good-password"}
-    ).json()["access_token"]
+    return client.post("/auth/login", json={"email": email, "password": "good-password"}).json()[
+        "access_token"
+    ]
 
 
 @pytest.fixture
@@ -46,9 +46,9 @@ def user_token(client):
         s.add(u)
         s.commit()
         email = u.email
-    return client.post(
-        "/auth/login", json={"email": email, "password": "good-password"}
-    ).json()["access_token"]
+    return client.post("/auth/login", json={"email": email, "password": "good-password"}).json()[
+        "access_token"
+    ]
 
 
 def test_admin_invite(client, admin_token):

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
 from sqlalchemy import DateTime, func
@@ -7,7 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 def now_utc() -> datetime:
     """Return current UTC datetime with timezone info."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(DeclarativeBase):
@@ -28,6 +28,4 @@ class TimestampMixin:
         server_default=func.now(),
         onupdate=func.now(),
     )
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -11,7 +11,12 @@ extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
-ignore = ["E501"]
+ignore = [
+  "E501",  # line length handled by formatter
+  "UP007", # keep Optional/Union for Python 3.9 local-dev compat
+  "UP045", # keep Optional[X] for Python 3.9 local-dev compat
+  "UP035", # don't rewrite typing.X deprecated aliases (would force X | None)
+]
 
 [tool.mypy]
 python_version = "3.13"

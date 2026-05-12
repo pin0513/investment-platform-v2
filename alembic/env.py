@@ -1,10 +1,9 @@
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from app.config import get_settings
-from app.models.base import Base
 
 # Import all models so metadata is populated.
 from app.models import (  # noqa: F401
@@ -16,6 +15,7 @@ from app.models import (  # noqa: F401
     refresh_token,
     user,
 )
+from app.models.base import Base
 
 config = context.config
 if config.config_file_name is not None:

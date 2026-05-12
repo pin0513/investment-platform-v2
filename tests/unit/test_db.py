@@ -7,8 +7,8 @@ from app.db import get_engine, session_scope
 @pytest.fixture(autouse=True)
 def cleanup_db_globals():
     """Clean up module-level globals after each test."""
-    import app.db
     import app.config
+    import app.db
 
     yield
     # Cleanup after test
@@ -25,8 +25,8 @@ def test_engine_created():
 
 def test_session_scope_yields_session(monkeypatch):
     # smoke test with SQLite memory to avoid prod DB
-    import app.db
     import app.config
+    import app.db
 
     # Clear the lru_cache on get_settings
     app.config.get_settings.cache_clear()

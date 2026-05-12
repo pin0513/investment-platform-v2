@@ -27,9 +27,9 @@ def token(client):
         s.add(u)
         s.commit()
         email = u.email
-    return client.post(
-        "/auth/login", json={"email": email, "password": "good-password"}
-    ).json()["access_token"]
+    return client.post("/auth/login", json={"email": email, "password": "good-password"}).json()[
+        "access_token"
+    ]
 
 
 def _h(t):

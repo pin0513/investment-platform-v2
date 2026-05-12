@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 import uuid
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
@@ -40,14 +40,14 @@ def _audit(request: Request, user: User, db: Session) -> AuditWriter:
     )
 
 
-@router.get("", response_model=List[InstrumentOut])
+@router.get("", response_model=list[InstrumentOut])
 def search_instruments(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
     q: Optional[str] = Query(default=None),
     asset_class: Optional[str] = Query(default=None),
     limit: int = Query(default=50, le=200),
-) -> List[InstrumentOut]:
+) -> list[InstrumentOut]:
     audit = AuditWriter(db, request_id=None, actor_user_id=user.id)
     svc = InstrumentService(db, audit)
     return [

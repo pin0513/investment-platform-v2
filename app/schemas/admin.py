@@ -15,9 +15,7 @@ class InviteResponse(BaseModel):
 
 class ServiceTokenRequest(BaseModel):
     name: str = Field(min_length=1, max_length=64)
-    expires_in_minutes: int = Field(
-        default=129600, gt=0, le=525600
-    )  # default 90 days
+    expires_in_minutes: int = Field(default=129600, gt=0, le=525600)  # default 90 days
 
 
 class ServiceTokenResponse(BaseModel):

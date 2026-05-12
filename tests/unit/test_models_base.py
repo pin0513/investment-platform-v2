@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -22,4 +22,4 @@ def test_now_utc_helper():
     from app.models.base import now_utc
 
     assert now_utc().tzinfo is not None
-    assert (now_utc() - datetime.now(timezone.utc)).total_seconds() < 1
+    assert (now_utc() - datetime.now(UTC)).total_seconds() < 1

@@ -4,8 +4,17 @@ from app.models.audit_log import AuditLog
 def test_audit_log_columns():
     cols = {c.name for c in AuditLog.__table__.columns}
     expected = {
-        "id", "occurred_at", "actor_user_id", "actor_type", "action",
-        "target_table", "target_id", "before", "after", "request_id", "ip",
+        "id",
+        "occurred_at",
+        "actor_user_id",
+        "actor_type",
+        "action",
+        "target_table",
+        "target_id",
+        "before",
+        "after",
+        "request_id",
+        "ip",
     }
     assert expected.issubset(cols)
 

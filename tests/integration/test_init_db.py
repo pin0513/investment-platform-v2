@@ -24,7 +24,9 @@ def test_init_db_creates_admin(monkeypatch):
             **os.environ,
             "FIRST_ADMIN_EMAIL": "pin0513@gmail.com",
             "DB_URL": os.environ["INTEGRATION_DB_URL"],
-            "PYTHONPATH": str(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+            "PYTHONPATH": str(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            ),
         },
     )
 

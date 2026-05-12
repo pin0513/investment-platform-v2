@@ -4,6 +4,7 @@ Generate a long-lived JWT for Cloud Scheduler use (run by admin).
 Usage:
   python scripts/generate_service_token.py <name> [<minutes>]
 """
+
 import sys
 import uuid
 

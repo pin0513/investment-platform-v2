@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,7 +12,7 @@ class AccountCreate(BaseModel):
     provider: Optional[str] = Field(default=None, max_length=64)
     currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
     external_account_no_last4: Optional[str] = Field(default=None, min_length=1, max_length=4)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class AccountUpdate(BaseModel):
@@ -21,7 +21,7 @@ class AccountUpdate(BaseModel):
     currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
     external_account_no_last4: Optional[str] = Field(default=None, min_length=1, max_length=4)
     is_active: Optional[bool] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
 
 class AccountOut(BaseModel):
@@ -35,4 +35,4 @@ class AccountOut(BaseModel):
     currency: Optional[str]
     external_account_no_last4: Optional[str]
     is_active: bool
-    metadata: Dict[str, Any] = Field(validation_alias="metadata_json")
+    metadata: dict[str, Any] = Field(validation_alias="metadata_json")

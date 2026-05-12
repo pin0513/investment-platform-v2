@@ -7,8 +7,8 @@ from app.security import (
     create_access_token,
     decode_access_token,
     hash_password,
-    new_refresh_token,
     hash_refresh_token,
+    new_refresh_token,
     verify_password,
 )
 
@@ -23,9 +23,7 @@ def test_password_hash_roundtrip():
 
 def test_access_token_roundtrip():
     user_id = uuid.uuid4()
-    token = create_access_token(
-        subject=str(user_id), email="x@y.z", role="USER", scope="user"
-    )
+    token = create_access_token(subject=str(user_id), email="x@y.z", role="USER", scope="user")
     claims = decode_access_token(token)
     assert claims["sub"] == str(user_id)
     assert claims["email"] == "x@y.z"

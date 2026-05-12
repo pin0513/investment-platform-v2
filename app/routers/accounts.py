@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 import uuid
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -40,11 +40,11 @@ def _audit_writer(request: Request, user: User, db: Session) -> AuditWriter:
     )
 
 
-@router.get("", response_model=List[AccountOut])
+@router.get("", response_model=list[AccountOut])
 def list_accounts(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
-) -> List[AccountOut]:
+) -> list[AccountOut]:
     audit = AuditWriter(db, request_id=None, actor_user_id=user.id)
     svc = AccountService(db, audit)
     return [AccountOut.model_validate(a) for a in svc.list(user.id)]

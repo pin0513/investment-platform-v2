@@ -9,9 +9,17 @@ from app import errors
 from app.config import get_settings
 from app.routers import (
     accounts as accounts_router,
+)
+from app.routers import (
     admin as admin_router,
+)
+from app.routers import (
     auth as auth_router,
+)
+from app.routers import (
     health,
+)
+from app.routers import (
     instruments as instruments_router,
 )
 

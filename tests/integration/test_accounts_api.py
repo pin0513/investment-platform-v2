@@ -43,7 +43,6 @@ def test_create_and_list_account(client, user_token):
         headers=_h(user_token),
     )
     assert r.status_code == 201
-    acc_id = r.json()["id"]
 
     r = client.get("/api/v1/accounts", headers=_h(user_token))
     assert r.status_code == 200

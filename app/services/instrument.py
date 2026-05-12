@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -26,15 +26,13 @@ class InstrumentService:
         q: Optional[str] = None,
         asset_class: Optional[str] = None,
         limit: int = 50,
-    ) -> List[Instrument]:
+    ) -> list[Instrument]:
         return self.repo.search(q=q, asset_class=asset_class, limit=limit)
 
     def get(self, instrument_id: uuid.UUID) -> Optional[Instrument]:
         return self.repo.get_by_id(instrument_id)
 
-    def get_by_symbol(
-        self, symbol: str, market: Optional[str] = None
-    ) -> Optional[Instrument]:
+    def get_by_symbol(self, symbol: str, market: Optional[str] = None) -> Optional[Instrument]:
         return self.repo.get_by_symbol_market(symbol, market)
 
     def create(self, payload: InstrumentCreate) -> Instrument:

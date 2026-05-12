@@ -6,9 +6,20 @@ from app.models.user import User
 def test_user_table_columns():
     cols = {c.name for c in User.__table__.columns}
     expected = {
-        "id", "email", "google_sub", "display_name", "slug", "base_currency",
-        "role", "password_hash", "is_active", "timezone", "metadata",
-        "created_at", "updated_at", "deleted_at",
+        "id",
+        "email",
+        "google_sub",
+        "display_name",
+        "slug",
+        "base_currency",
+        "role",
+        "password_hash",
+        "is_active",
+        "timezone",
+        "metadata",
+        "created_at",
+        "updated_at",
+        "deleted_at",
     }
     assert expected.issubset(cols)
 

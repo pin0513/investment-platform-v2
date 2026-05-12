@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -21,16 +21,14 @@ def _build(
     code: str,
     message: str,
     request_id: Optional[str],
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> dict:
     return ErrorResponse(
         error=ErrorBody(code=code, message=message, request_id=request_id, details=details)
     ).model_dump(mode="json")
 
 
-async def http_exception_handler(
-    request: Request, exc: StarletteHTTPException
-) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     code_map = {
         400: "BAD_REQUEST",
         401: "UNAUTHORIZED",

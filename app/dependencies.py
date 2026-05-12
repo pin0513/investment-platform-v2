@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterator
 from typing import Annotated, Optional
 
 from fastapi import Cookie, Depends, Header, HTTPException, status
@@ -14,16 +13,14 @@ from app.repositories.user import UserRepository
 from app.security import decode_access_token
 
 
-def _parse_auth_token(
-    authorization: Optional[str], cookie: Optional[str]
-) -> dict:
+def _parse_auth_token(authorization: Optional[str], cookie: Optional[str]) -> dict:
     if authorization:
         if not authorization.startswith("Bearer "):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Malformed Authorization header",
             )
-        token = authorization[len("Bearer "):]
+        token = authorization[len("Bearer ") :]
     elif cookie:
         token = cookie
     else:

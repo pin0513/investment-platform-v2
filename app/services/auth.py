@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Optional
-
-from sqlalchemy.orm import Session
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.repositories.refresh_token import RefreshTokenRepository
@@ -52,7 +51,7 @@ class AuthService:
             scope="user" if user.role != "SERVICE" else "service",  # type: ignore[attr-defined]
         )
         raw_refresh = new_refresh_token()
-        expires = datetime.now(timezone.utc) + timedelta(days=self.settings.refresh_token_days)
+        expires = datetime.now(UTC) + timedelta(days=self.settings.refresh_token_days)
         self.refresh_tokens.create(
             user_id=user.id,  # type: ignore[attr-defined]
             token_hash=hash_refresh_token(raw_refresh),
@@ -98,7 +97,7 @@ class AuthService:
         rt = self.refresh_tokens.get_by_hash(h)
         if rt is None or rt.revoked_at is not None:
             raise InvalidRefreshTokenError("Refresh token invalid or revoked")
-        if rt.expires_at < datetime.now(timezone.utc):
+        if rt.expires_at < datetime.now(UTC):
             raise InvalidRefreshTokenError("Refresh token expired")
 
         user = self.users.get_by_id(rt.user_id)

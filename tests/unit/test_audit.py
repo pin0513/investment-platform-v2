@@ -30,9 +30,7 @@ def test_audit_writer_writes_row(monkeypatch):
         )
 
     with session_scope() as s:
-        rows = s.execute(
-            select(AuditLog).where(AuditLog.request_id == request_id)
-        ).scalars().all()
+        rows = s.execute(select(AuditLog).where(AuditLog.request_id == request_id)).scalars().all()
         assert len(rows) == 1
         row = rows[0]
         assert row.action == "INSERT"

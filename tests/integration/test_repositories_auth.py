@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import delete
@@ -23,6 +23,7 @@ def fresh_user(monkeypatch):
     monkeypatch.setenv("DB_URL", os.environ["INTEGRATION_DB_URL"])
     import app.db as db_module
     from app.config import get_settings
+
     # Reset cached engine so monkeypatched DB_URL is picked up
     db_module._engine = None
     db_module._SessionLocal = None
@@ -70,7 +71,7 @@ def test_refresh_token_repository_create_and_revoke(monkeypatch, fresh_user):
         rt = repo.create(
             user_id=fresh_user.id,
             token_hash=unique_hash,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+            expires_at=datetime.now(UTC) + timedelta(days=30),
         )
         assert rt.id
 

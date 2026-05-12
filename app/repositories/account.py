@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from datetime import UTC
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,17 +14,13 @@ class AccountRepository:
     def __init__(self, session: Session):
         self.s = session
 
-    def list_for_user(
-        self, user_id: uuid.UUID, include_deleted: bool = False
-    ) -> List[Account]:
+    def list_for_user(self, user_id: uuid.UUID, include_deleted: bool = False) -> list[Account]:
         stmt = select(Account).where(Account.user_id == user_id)
         if not include_deleted:
             stmt = stmt.where(Account.deleted_at.is_(None))
         return list(self.s.execute(stmt).scalars())
 
-    def get_for_user(
-        self, user_id: uuid.UUID, account_id: uuid.UUID
-    ) -> Optional[Account]:
+    def get_for_user(self, user_id: uuid.UUID, account_id: uuid.UUID) -> Optional[Account]:
         stmt = select(Account).where(
             Account.id == account_id,
             Account.user_id == user_id,
@@ -37,6 +34,6 @@ class AccountRepository:
         return account
 
     def soft_delete(self, account: Account) -> None:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        account.deleted_at = datetime.now(timezone.utc)
+        account.deleted_at = datetime.now(UTC)

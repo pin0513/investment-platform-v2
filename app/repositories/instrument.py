@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -18,21 +18,17 @@ class InstrumentRepository:
         q: Optional[str] = None,
         asset_class: Optional[str] = None,
         limit: int = 50,
-    ) -> List[Instrument]:
+    ) -> list[Instrument]:
         stmt = select(Instrument).where(Instrument.is_active.is_(True))
         if asset_class:
             stmt = stmt.where(Instrument.asset_class == asset_class)
         if q:
             like = f"%{q.upper()}%"
-            stmt = stmt.where(
-                (Instrument.symbol.ilike(like)) | (Instrument.name.ilike(like))
-            )
+            stmt = stmt.where((Instrument.symbol.ilike(like)) | (Instrument.name.ilike(like)))
         stmt = stmt.limit(limit)
         return list(self.s.execute(stmt).scalars())
 
-    def get_by_symbol_market(
-        self, symbol: str, market: Optional[str]
-    ) -> Optional[Instrument]:
+    def get_by_symbol_market(self, symbol: str, market: Optional[str]) -> Optional[Instrument]:
         stmt = select(Instrument).where(Instrument.symbol == symbol)
         if market is not None:
             stmt = stmt.where(Instrument.market == market)
