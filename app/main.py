@@ -9,6 +9,7 @@ from app import errors
 from app.config import get_settings
 from app.routers import (
     accounts as accounts_router,
+    admin as admin_router,
     auth as auth_router,
     health,
     instruments as instruments_router,
@@ -52,6 +53,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router.router)
     app.include_router(accounts_router.router)
     app.include_router(instruments_router.router)
+    app.include_router(admin_router.router)
     return app
 
 
