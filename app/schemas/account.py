@@ -35,4 +35,4 @@ class AccountOut(BaseModel):
     currency: Optional[str]
     external_account_no_last4: Optional[str]
     is_active: bool
-    metadata: Dict[str, Any] = Field(alias="metadata_json")
+    metadata: Dict[str, Any] = Field(validation_alias="metadata_json")
