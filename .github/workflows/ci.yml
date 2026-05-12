@@ -45,6 +45,7 @@ jobs:
 
       - name: Apply migrations
         env:
+          PYTHONPATH: .
           DB_URL: postgresql+psycopg://investment_user:dev_pw@localhost:5432/investment_v2
           JWT_SECRET: ci_secret_at_least_32_chars_xxxxxxxx
           GOOGLE_OAUTH_CLIENT_ID: ci.apps.googleusercontent.com
