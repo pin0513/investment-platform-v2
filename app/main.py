@@ -62,7 +62,11 @@ def create_app() -> FastAPI:
     async def lifespan(app: FastAPI):
         # Run the MCP sub-app lifespan alongside the FastAPI lifespan so that
         # FastMCP's StreamableHTTPSessionManager task group is initialized.
-        async with mcp_http_app.lifespan(mcp_http_app):
+        # FastMCP 3.x returns an app with a .lifespan attribute; 2.x does not.
+        if hasattr(mcp_http_app, "lifespan") and mcp_http_app.lifespan is not None:
+            async with mcp_http_app.lifespan(mcp_http_app):
+                yield
+        else:
             yield
 
     app = FastAPI(
