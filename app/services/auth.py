@@ -6,6 +6,9 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+
 from app.config import get_settings
 from app.repositories.refresh_token import RefreshTokenRepository
 from app.repositories.user import UserRepository
@@ -111,3 +114,27 @@ class AuthService:
         rt = self.refresh_tokens.get_by_hash(h)
         if rt is not None:
             self.refresh_tokens.revoke(rt.id)
+
+
+class GoogleVerifyError(Exception):
+    pass
+
+
+class GoogleIdTokenVerifier:
+    def __init__(self) -> None:
+        self.settings = get_settings()
+
+    def verify(self, raw_token: str) -> dict:
+        try:
+            payload = id_token.verify_oauth2_token(
+                raw_token,
+                google_requests.Request(),
+                self.settings.google_oauth_client_id,
+            )
+        except Exception as e:
+            raise GoogleVerifyError(f"Token verification failed: {e}") from e
+
+        if not payload.get("email_verified"):
+            raise GoogleVerifyError("Email not verified by Google")
+
+        return payload
