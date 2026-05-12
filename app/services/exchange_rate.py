@@ -34,9 +34,7 @@ class ExchangeRateService:
         )
         return r
 
-    def get_rate(
-        self, base: str, quote: str, on_date: date_t
-    ) -> Decimal | None:
+    def get_rate(self, base: str, quote: str, on_date: date_t) -> Decimal | None:
         if base == quote:
             return Decimal("1")
         direct = self.repo.latest_at_or_before(base.upper(), quote.upper(), on_date)

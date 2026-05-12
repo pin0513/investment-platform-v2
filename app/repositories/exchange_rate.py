@@ -14,9 +14,7 @@ class ExchangeRateRepository:
     def get(self, base: str, quote: str, on_date: date_t) -> ExchangeRate | None:
         return self.s.get(ExchangeRate, (base, quote, on_date))
 
-    def latest_at_or_before(
-        self, base: str, quote: str, on_date: date_t
-    ) -> ExchangeRate | None:
+    def latest_at_or_before(self, base: str, quote: str, on_date: date_t) -> ExchangeRate | None:
         stmt = (
             select(ExchangeRate)
             .where(

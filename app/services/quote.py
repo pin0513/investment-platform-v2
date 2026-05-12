@@ -1,5 +1,3 @@
-import uuid
-
 from sqlalchemy.orm import Session
 
 from app.audit import AuditWriter
@@ -20,9 +18,7 @@ class QuoteService:
         self.instruments = InstrumentRepository(session)
         self.audit = audit
 
-    def upsert_by_symbol(
-        self, symbol: str, market: str | None, payload: QuoteUpsert
-    ) -> Quote:
+    def upsert_by_symbol(self, symbol: str, market: str | None, payload: QuoteUpsert) -> Quote:
         inst = self.instruments.get_by_symbol_market(symbol, market)
         if inst is None:
             raise InstrumentNotFoundError(f"{symbol} ({market})")

@@ -5,7 +5,6 @@ from decimal import Decimal
 import pytest
 
 from app.db import session_scope
-from app.models.exchange_rate import ExchangeRate
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.security import hash_password

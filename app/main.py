@@ -17,6 +17,9 @@ from app.routers import (
     auth as auth_router,
 )
 from app.routers import (
+    exchange_rates as exchange_rates_router,
+)
+from app.routers import (
     health,
 )
 from app.routers import (
@@ -24,9 +27,6 @@ from app.routers import (
 )
 from app.routers import (
     instruments as instruments_router,
-)
-from app.routers import (
-    exchange_rates as exchange_rates_router,
 )
 from app.routers import (
     quotes as quotes_router,
