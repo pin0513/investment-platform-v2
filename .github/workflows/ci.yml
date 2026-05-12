@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: investment_user
+          POSTGRES_PASSWORD: dev_pw
+          POSTGRES_DB: investment_v2
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Mypy
+        run: mypy app/ || echo "mypy issues noted (not blocking yet)"
+
+      - name: Apply migrations
+        env:
+          DB_URL: postgresql+psycopg://investment_user:dev_pw@localhost:5432/investment_v2
+          JWT_SECRET: ci_secret_at_least_32_chars_xxxxxxxx
+          GOOGLE_OAUTH_CLIENT_ID: ci.apps.googleusercontent.com
+          FIRST_ADMIN_EMAIL: ci-admin@example.com
+        run: python scripts/init_db.py
+
+      - name: Run tests
+        env:
+          DB_URL: postgresql+psycopg://investment_user:dev_pw@localhost:5432/investment_v2
+          INTEGRATION_DB_URL: postgresql+psycopg://investment_user:dev_pw@localhost:5432/investment_v2
+          JWT_SECRET: ci_secret_at_least_32_chars_xxxxxxxx
+          GOOGLE_OAUTH_CLIENT_ID: ci.apps.googleusercontent.com
+        run: pytest -v
