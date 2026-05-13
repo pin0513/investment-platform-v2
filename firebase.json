@@ -1,0 +1,15 @@
+{
+  "hosting": {
+    "public": "firebase-hosting/public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "investment-platform-v2",
+          "region": "asia-east1"
+        }
+      }
+    ]
+  }
+}
