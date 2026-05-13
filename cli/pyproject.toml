@@ -1,0 +1,38 @@
+[project]
+name = "ipv2-cli"
+version = "0.1.0"
+description = "CLI for investment-platform-v2"
+requires-python = ">=3.13"
+dependencies = [
+  "click>=8.1",
+  "httpx>=0.27",
+  "pydantic>=2.9",
+  "pyyaml>=6.0",
+  "rich>=13.7",
+]
+
+[project.scripts]
+ipv2 = "ipv2.cli:cli"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "pytest-cov>=6.0", "ruff>=0.15"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ipv2*"]
+exclude = ["tests*", "examples*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501", "N818"]  # N818: keep conventional exception names without "Error" suffix
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -v"

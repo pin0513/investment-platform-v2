@@ -1,0 +1,105 @@
+# import-example.yaml - Commented working example for `ipv2 import`
+#
+# This file demonstrates how to import a portfolio snapshot into investment-platform-v2.
+# Run:  ipv2 import preview import-example.yaml
+#       ipv2 import apply   import-example.yaml
+
+# Required. Must be exactly 1.
+version: 1
+
+# Optional. When an account has no `owner` field, this name is used.
+# If not set and an account has no owner, the import will fail with MISSING_OWNER ambiguity.
+default_owner: self
+
+# -----------------------------------------------------
+#  Accounts
+#  Each account must have a unique `id` within this file.
+#  The `id` is only used for cross-referencing - it is NOT stored in the database.
+# -----------------------------------------------------
+accounts:
+  - id: fubon-tw          # local reference key for holdings/cash below
+    name: Fubon Securities  # display name (stored in DB)
+    type: BROKER_STOCK    # BROKER_STOCK | BANK | FOREX | FUND_PLATFORM | CRYPTO_EXCHANGE | WALLET
+    currency: TWD
+    owner: self           # owner identifier (matched against user email prefix)
+    provider: Fubon       # optional: broker/bank name
+    # on_conflict: abort  # abort | skip | update | new-with-suffix (default: abort)
+
+  - id: hsbc-usd
+    name: HSBC USD Savings
+    type: BANK
+    currency: USD
+    owner: self
+    provider: HSBC
+    metadata:
+      branch: Taipei Main   # arbitrary key-value metadata (stored as JSONB)
+
+# -----------------------------------------------------
+#  Instruments (optional - auto-created from holdings if omitted)
+# -----------------------------------------------------
+instruments:
+  - symbol: 2330.TW
+    asset_class: EQUITY   # EQUITY, ETF, MUTUAL_FUND, CRYPTO, BOND, CASH, COMMODITY, DERIVATIVE, OTHER
+    name: Taiwan Semiconductor Manufacturing Co.
+    currency: TWD
+    market: TW            # exchange market code
+
+  - symbol: VOO
+    asset_class: ETF
+    name: Vanguard S&P 500 ETF
+    currency: USD
+    market: US
+
+# -----------------------------------------------------
+#  Holdings (opening positions - imported as BUY transactions)
+# -----------------------------------------------------
+holdings:
+  - account: fubon-tw   # must match an account `id` above
+    symbol: 2330.TW
+    quantity: "100"      # use quoted strings to avoid YAML float precision issues
+    avg_cost: "550.00"   # cost per unit in the account's currency
+    opened_at: "2024-01-15"
+    # external_ref: "opening:fubon-tw:2330.TW"  # default if not set
+
+  - account: fubon-tw
+    symbol: VOO
+    quantity: "10"
+    avg_cost: "420.50"
+    currency: USD        # override currency if different from account currency
+    opened_at: "2023-11-20"
+
+  - account: hsbc-usd
+    symbol: VOO
+    quantity: "5"
+    avg_cost: "410.00"
+    opened_at: "2023-06-10"
+
+# -----------------------------------------------------
+#  Cash balances
+# -----------------------------------------------------
+cash:
+  - account: fubon-tw
+    balance: "45000"     # TWD - must match account currency
+    as_of: "2024-01-15"
+
+  - account: hsbc-usd
+    balance: "12500.00"
+    as_of: "2024-01-15"
+
+# -----------------------------------------------------
+#  Quotes (optional - override market prices)
+# -----------------------------------------------------
+quotes:
+  - symbol: 2330.TW
+    price: "605.00"
+    currency: TWD
+    as_of: "2024-01-15"
+
+# -----------------------------------------------------
+#  Exchange rates (optional)
+# -----------------------------------------------------
+exchange_rates:
+  - base: USD
+    quote: TWD
+    rate: "31.45"
+    as_of: "2024-01-15"
