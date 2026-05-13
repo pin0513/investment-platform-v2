@@ -17,11 +17,28 @@ from ipv2.credentials import CredentialsNotFound
 from ipv2.credentials import load as load_creds
 from ipv2.output import console, print_error, print_success, print_table, print_warning
 from ipv2.schemas import ImportFile
+from ipv2.validation import Severity, has_errors, validate
 
 
 @click.group()
 def import_() -> None:
     """Import portfolio data from a YAML file."""
+
+
+@import_.command(name="validate")
+@click.argument("file", type=click.Path(exists=True, path_type=Path))
+@click.option("--owner-default", default=None, help="Override file's default_owner.")
+def validate_cmd(file: Path, owner_default: str | None) -> None:
+    """Offline validation of FILE — no API calls.
+
+    Exit code 0 if no errors; exit code 4 if any errors are found.
+    Warnings and info messages do not affect the exit code.
+    """
+    import_file = _load_yaml(file)
+    issues = validate(import_file, owner_default=owner_default)
+    _print_validation_issues(file, issues)
+    if has_errors(issues):
+        raise SystemExit(4)
 
 
 @import_.command()
@@ -117,11 +134,8 @@ def apply(
     _print_apply_results(results, output_format)
 
 
-def _parse_and_collect(
-    file: Path,
-    owner_default: str | None,
-) -> tuple[ImportFile, AmbiguityCollector]:
-    """Parse YAML and run local ambiguity checks (no API calls)."""
+def _load_yaml(file: Path) -> ImportFile:
+    """Load and parse YAML into ImportFile; exit 1 on YAML/schema error."""
     try:
         raw = yaml.safe_load(file.read_text())
     except yaml.YAMLError as e:
@@ -129,24 +143,32 @@ def _parse_and_collect(
         raise SystemExit(1) from e
 
     try:
-        import_file = ImportFile.model_validate(raw)
+        return ImportFile.model_validate(raw)
     except Exception as e:
         print_error(f"Schema validation error: {e}")
         raise SystemExit(1) from e
 
+
+def _parse_and_collect(
+    file: Path,
+    owner_default: str | None,
+) -> tuple[ImportFile, AmbiguityCollector]:
+    """Parse YAML, run validation (L2-L5), then run ambiguity checks (no API calls)."""
+    import_file = _load_yaml(file)
+
+    # Run L2-L5 validation; abort on any errors
+    issues = validate(import_file, owner_default=owner_default)
+    if has_errors(issues):
+        _print_validation_issues(file, issues)
+        raise SystemExit(4)
+
+    # Print non-error issues (warnings, info) quietly
+    non_error = [i for i in issues if i.severity != Severity.ERROR]
+    if non_error:
+        _print_validation_issues(file, non_error)
+
     effective_default_owner = owner_default or import_file.default_owner
     collector = AmbiguityCollector()
-    account_ids = {a.id for a in import_file.accounts}
-
-    for h in import_file.holdings:
-        if h.account not in account_ids:
-            print_error(f"Holding refs unknown account: {h.account!r}")
-            raise SystemExit(1)
-
-    for c in import_file.cash:
-        if c.account not in account_ids:
-            print_error(f"Cash refs unknown account: {c.account!r}")
-            raise SystemExit(1)
 
     for acc in import_file.accounts:
         owner = acc.owner or effective_default_owner
@@ -154,6 +176,55 @@ def _parse_and_collect(
             collector.check_missing_owner(acc.id, acc.name, effective_default_owner)
 
     return import_file, collector
+
+
+def _print_validation_issues(file: Path, issues: list) -> None:  # type: ignore[type-arg]
+    """Print validation issues grouped by severity using rich."""
+    from ipv2.validation import ValidationIssue
+
+    all_issues: list[ValidationIssue] = issues
+    errors = [i for i in all_issues if i.severity == Severity.ERROR]
+    warnings = [i for i in all_issues if i.severity == Severity.WARNING]
+    infos = [i for i in all_issues if i.severity == Severity.INFO]
+
+    console.print(f"\nFile: [bold]{file}[/bold]\n")
+
+    parts = []
+    if errors:
+        parts.append(f"[red bold]{len(errors)} error{'s' if len(errors) != 1 else ''}[/red bold]")
+    if warnings:
+        parts.append(
+            f"[yellow bold]{len(warnings)} warning{'s' if len(warnings) != 1 else ''}[/yellow bold]"
+        )
+    if infos:
+        parts.append(f"[dim]{len(infos)} info[/dim]")
+
+    if parts:
+        icons = []
+        if errors:
+            icons.append("[red]X[/red]")
+        if warnings:
+            icons.append("[yellow]![/yellow]")
+        if infos:
+            icons.append("[dim]i[/dim]")
+        console.print(f"{'  '.join(icons)}  {', '.join(parts)}\n")
+
+    for issue in all_issues:
+        if issue.severity == Severity.ERROR:
+            sev_tag = "[red bold]ERROR  [/red bold]"
+        elif issue.severity == Severity.WARNING:
+            sev_tag = "[yellow bold]WARNING[/yellow bold]"
+        else:
+            sev_tag = "[dim]INFO   [/dim]"
+
+        console.print(f"{sev_tag}  [cyan]{issue.code:<30}[/cyan] {issue.field_path}")
+        console.print(f"         {issue.message}")
+        if issue.suggestion:
+            console.print(f"         [dim]Suggestion: {issue.suggestion}[/dim]")
+        console.print("")
+
+    if any(i.severity == Severity.ERROR for i in all_issues):
+        console.print("[red bold]Aborting. Fix errors and re-run.[/red bold]\n")
 
 
 def _print_preview_summary(
