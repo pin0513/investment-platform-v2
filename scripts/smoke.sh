@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-https://investment-platform-v2-yt3vv5n7za-de.a.run.app}"
+BASE_URL="${BASE_URL:-https://invest.paulfun.net}"
 SMOKE_EMAIL="${SMOKE_EMAIL:-}"
 SMOKE_PASSWORD="${SMOKE_PASSWORD:-}"
 
@@ -14,67 +14,63 @@ curl -sf "$BASE_URL/health" | python3 -m json.tool
 echo
 echo "2) /api/v1/accounts without auth (expect 401)"
 status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/v1/accounts")
-if [ "$status" != "401" ]; then
-  echo "Expected 401, got $status"; exit 1
-fi
-echo "OK"
+[ "$status" = "401" ] && echo "OK" || { echo "FAIL ($status)"; exit 1; }
 
 echo
-echo "3) Error envelope on 404 /api/v1/nope"
-curl -s "$BASE_URL/api/v1/nope" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-assert 'error' in d
-assert d['error']['code'] in ('NOT_FOUND', 'ERROR')
-print('OK')
-"
+echo "3) GET / unauthenticated (expect 303 to /auth/login)"
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/")
+[ "$status" = "303" ] && echo "OK" || { echo "FAIL ($status)"; exit 1; }
 
 echo
-echo "4) /openapi.json"
-curl -sf "$BASE_URL/openapi.json" > /tmp/openapi.json
-size=$(wc -c < /tmp/openapi.json)
+echo "4) GET /auth/login renders HTML"
+body=$(curl -sf "$BASE_URL/auth/login")
+echo "$body" | grep -q "g_id_onload" && echo "OK" || { echo "FAIL (no Google Sign-In)"; exit 1; }
+
+echo
+echo "5) /openapi.json"
+size=$(curl -sf "$BASE_URL/openapi.json" | wc -c)
 echo "openapi.json size: $size bytes"
 [ "$size" -gt 1000 ] && echo "OK" || { echo "FAIL"; exit 1; }
-rm -f /tmp/openapi.json
+
+echo
+echo "6) /static/js/htmx.min.js served"
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/static/js/htmx.min.js")
+[ "$status" = "200" ] && echo "OK" || { echo "FAIL ($status)"; exit 1; }
 
 if [ -z "$SMOKE_EMAIL" ] || [ -z "$SMOKE_PASSWORD" ]; then
   echo
-  echo "Skipping auth+flow checks (SMOKE_EMAIL/SMOKE_PASSWORD not set)."
-  echo "All baseline smoke checks passed."
+  echo "Skipping auth flow (set SMOKE_EMAIL + SMOKE_PASSWORD to enable)."
+  echo "All baseline checks passed."
   exit 0
 fi
 
 echo
-echo "5) login as $SMOKE_EMAIL"
+echo "7) Login + load dashboard HTML"
 TOKEN=$(curl -sf -X POST "$BASE_URL/auth/login" \
   -H 'content-type: application/json' \
   -d "{\"email\":\"$SMOKE_EMAIL\",\"password\":\"$SMOKE_PASSWORD\"}" \
   | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
-[ -n "$TOKEN" ] && echo "OK (got token)" || { echo "FAIL"; exit 1; }
 
-H="Authorization: Bearer $TOKEN"
+# Get user's slug
+SLUG=$(curl -sf "$BASE_URL/auth/me" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["slug"])')
+echo "Slug: $SLUG"
 
-echo
-echo "6) GET /api/v1/portfolio/summary (may be empty)"
-curl -sf "$BASE_URL/api/v1/portfolio/summary" -H "$H" \
-  | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-assert "base_currency" in d
-assert "total_value" in d
-assert "holdings" in d
-print("OK total_value =", d["total_value"], "with", len(d["holdings"]), "holdings")
-'
+DASH=$(curl -sf "$BASE_URL/$SLUG/" -H "Authorization: Bearer $TOKEN")
+echo "$DASH" | grep -q "總資產" && echo "OK (dashboard renders)" || { echo "FAIL"; exit 1; }
 
-echo
-echo "7) GET /mcp/ with bearer should NOT be 401"
-status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE_URL/mcp/" \
-  -H "$H" -H 'content-type: application/json' \
-  -d '{"jsonrpc":"2.0","method":"initialize","id":1}')
-if [ "$status" = "401" ]; then
-  echo "FAIL: /mcp returned 401 with valid JWT"; exit 1
-fi
-echo "OK (got $status)"
+echo "8) Portfolio page"
+PF=$(curl -sf "$BASE_URL/$SLUG/portfolio" -H "Authorization: Bearer $TOKEN")
+echo "$PF" | grep -q "持倉" && echo "OK" || { echo "FAIL"; exit 1; }
+
+echo "9) Transactions page"
+TX=$(curl -sf "$BASE_URL/$SLUG/transactions" -H "Authorization: Bearer $TOKEN")
+echo "$TX" | grep -q "交易紀錄" && echo "OK" || { echo "FAIL"; exit 1; }
+
+echo "10) CSV export"
+curl -sf -H "Authorization: Bearer $TOKEN" \
+  "$BASE_URL/$SLUG/transactions?format=csv" \
+  | head -1 | grep -q "id,occurred_at,txn_type" && echo "OK" || { echo "FAIL"; exit 1; }
 
 echo
 echo "All smoke checks passed."

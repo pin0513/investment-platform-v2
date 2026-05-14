@@ -112,6 +112,23 @@ pytest -v
 - enums as `VARCHAR(32)` (no PG enum types)
 - Every mutation writes `audit_log` via `AuditWriter`
 
+## Reader UI (P2)
+
+Mounted at `/` and `/{slug}/...`:
+
+- `GET /` — redirect to `/{slug}/` if logged in, else `/auth/login`
+- `GET /auth/login` — Google Sign-In page
+- `GET /auth/logout` — clear cookie + redirect
+- `GET /{slug}/` — dashboard with net worth + 3 breakdown donuts + top holdings
+- `GET /{slug}/portfolio` — holdings table with HTMX tabs (class/account/industry/owner)
+- `GET /{slug}/portfolio/{account_id}` — single account
+- `GET /{slug}/instruments/{symbol}` — single instrument detail
+- `GET /{slug}/transactions` — transactions list with date filters
+- `GET /{slug}/transactions?format=csv` — CSV download
+- `GET /{slug}/settings` — basic profile
+
+Templates: `app/templates/`. Static: `app/static/`. Tailwind via CDN; HTMX + Chart.js vendored.
+
 ## Reference
 
 - Spec: `docs/superpowers/specs/2026-05-12-investment-platform-v2-design.md`
