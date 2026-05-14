@@ -43,6 +43,7 @@ from app.routers.reader import dashboard as reader_dashboard
 from app.routers.reader import instruments_view as reader_instruments
 from app.routers.reader import portfolio as reader_portfolio
 from app.routers.reader import root as reader_root
+from app.routers.reader import settings as reader_settings
 from app.routers.reader import transactions_view as reader_transactions
 
 
@@ -112,6 +113,7 @@ def create_app() -> FastAPI:
     app.include_router(reader_portfolio.router)
     app.include_router(reader_instruments.router)
     app.include_router(reader_transactions.router)
+    app.include_router(reader_settings.router)
 
     # Mount the MCP sub-app at /mcp — must come after all include_router() calls.
     # Endpoint inside the sub-app is "/" → full path is POST /mcp/.
