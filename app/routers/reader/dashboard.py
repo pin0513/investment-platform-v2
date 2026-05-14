@@ -10,6 +10,7 @@ from app.audit import AuditWriter
 from app.db import get_db
 from app.dependencies import _verify_slug, get_current_user_for_html
 from app.models.user import User
+from app.services.analysis import AnalysisService
 from app.services.portfolio import PortfolioService
 from app.templating import get_templates
 
@@ -40,6 +41,14 @@ def dashboard(
         reverse=True,
     )[:10]
 
+    # Fetch latest 5 analyses per top holding
+    analysis_svc = AnalysisService(db, audit)
+    analyses_by_symbol: dict[str, list[Any]] = {}
+    for h in top:
+        items = analysis_svc.list_for_instrument(user.id, h.instrument_id, limit=5)
+        if items:
+            analyses_by_symbol[h.symbol] = items
+
     return get_templates().TemplateResponse(
         "pages/dashboard.html",
         {
@@ -47,5 +56,6 @@ def dashboard(
             "user": user,
             "summary": summary,
             "top_holdings": top,
+            "analyses_by_symbol": analyses_by_symbol,
         },
     )

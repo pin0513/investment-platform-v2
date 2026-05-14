@@ -75,4 +75,47 @@
   </div>
 </div>
 
+<div class="mt-8 rounded-lg bg-white p-4 shadow">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="text-base font-semibold text-slate-900">最新分析</h2>
+    <span class="text-xs text-slate-500">{{ analyses_by_symbol | length }} 個標的有分析</span>
+  </div>
+  {% if analyses_by_symbol %}
+    <div class="space-y-4">
+      {% for symbol, items in analyses_by_symbol.items() %}
+      <details class="rounded border border-slate-200">
+        <summary class="cursor-pointer px-3 py-2 text-sm">
+          <span class="font-medium">{{ symbol }}</span>
+          <span class="text-xs text-slate-400">{{ items[0].as_of_date }} · {{ items | length }} 筆</span>
+        </summary>
+        <div class="space-y-3 border-t border-slate-100 p-3">
+          {% for a in items %}
+          <div class="rounded bg-slate-50 p-3">
+            <div class="mb-1 flex items-center gap-2 text-xs">
+              <span class="rounded bg-slate-900 px-1.5 py-0.5 font-mono text-white">{{ a.analysis_type }}</span>
+              {% if a.angle %}<span class="text-slate-500">{{ a.angle }}</span>{% endif %}
+              <span class="text-slate-400">{{ a.as_of_date }}</span>
+              {% if a.confidence %}<span class="ml-auto text-slate-500">confidence: {{ a.confidence }}</span>{% endif %}
+            </div>
+            {% if a.title %}<p class="text-sm font-semibold">{{ a.title }}</p>{% endif %}
+            {% if a.summary_md %}<p class="mt-1 text-sm text-slate-700 whitespace-pre-line">{{ a.summary_md }}</p>{% endif %}
+            {% if a.sources %}
+            <details class="mt-2 text-xs text-slate-500">
+              <summary>來源 ({{ a.sources | length }})</summary>
+              <ul class="mt-1 ml-4 list-disc">
+                {% for s in a.sources %}<li><a href="{{ s.url }}" target="_blank" rel="noreferrer" class="hover:underline">{{ s.title or s.url }}</a></li>{% endfor %}
+              </ul>
+            </details>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  {% else %}
+  <p class="text-sm text-slate-400">尚無分析。透過 POST /api/v1/instruments/{symbol}/analyses 新增。</p>
+  {% endif %}
+</div>
+
 {% endblock %}
