@@ -1,4 +1,5 @@
 """REST API for per-instrument persistent analyses (P2.5)."""
+
 from __future__ import annotations
 
 import uuid

@@ -1,4 +1,5 @@
 """Integration tests for the analyses API (P2.5)."""
+
 import os
 import uuid
 
@@ -32,9 +33,9 @@ def auth(client):
         s.commit()
         email = u.email
 
-    token = client.post("/auth/login", json={"email": email, "password": "test-password-123"}).json()[
-        "access_token"
-    ]
+    token = client.post(
+        "/auth/login", json={"email": email, "password": "test-password-123"}
+    ).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     # Create a unique instrument per test
@@ -192,9 +193,9 @@ def test_patch_analysis_wrong_user_returns_404(client, auth):
         s.commit()
         email2 = u2.email
 
-    token2 = client.post("/auth/login", json={"email": email2, "password": "test-password-123"}).json()[
-        "access_token"
-    ]
+    token2 = client.post(
+        "/auth/login", json={"email": email2, "password": "test-password-123"}
+    ).json()["access_token"]
     headers2 = {"Authorization": f"Bearer {token2}"}
 
     # User1 creates an analysis

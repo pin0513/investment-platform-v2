@@ -1,4 +1,5 @@
 """Unit tests for the Analysis model."""
+
 from app.models.analysis import Analysis
 
 
@@ -33,11 +34,7 @@ def test_analysis_columns():
 
 
 def test_analysis_fks():
-    fk_targets = {
-        fk.column.table.name
-        for c in Analysis.__table__.columns
-        for fk in c.foreign_keys
-    }
+    fk_targets = {fk.column.table.name for c in Analysis.__table__.columns for fk in c.foreign_keys}
     assert "users" in fk_targets
     assert "instruments" in fk_targets
 
