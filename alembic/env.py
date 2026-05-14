@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.models import (  # noqa: F401
     account,
     allowlisted_email,
+    analysis,  # new
     audit_log,
     exchange_rate,  # new
     holding,  # new
