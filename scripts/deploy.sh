@@ -20,7 +20,7 @@ gcloud run deploy "${SERVICE}" \
   --memory=512Mi \
   --set-env-vars="ENVIRONMENT=prod,ALLOWED_ORIGINS=https://invest.paulfun.net,GOOGLE_OAUTH_CLIENT_ID=329908581117-0csnfufiij5h5oc6a8qah5uvnm447ppo.apps.googleusercontent.com,FIRST_ADMIN_EMAIL=pin0513@gmail.com" \
   --set-secrets="JWT_SECRET=JWT_SECRET:latest,DB_URL=DB_URL:latest" \
-  --vpc-egress=all-traffic \
+  --vpc-egress=private-ranges-only \
   --network=default \
   --subnet=default
 
