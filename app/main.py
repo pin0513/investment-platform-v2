@@ -16,6 +16,9 @@ from app.routers import (
     admin as admin_router,
 )
 from app.routers import (
+    analyses as analyses_router,
+)
+from app.routers import (
     auth as auth_router,
 )
 from app.routers import (
@@ -108,6 +111,7 @@ def create_app() -> FastAPI:
     app.include_router(quotes_router.router)
     app.include_router(exchange_rates_router.router)
     app.include_router(portfolio_router.router)
+    app.include_router(analyses_router.router)
     app.include_router(reader_root.router)
     app.include_router(reader_dashboard.router)
     app.include_router(reader_portfolio.router)
