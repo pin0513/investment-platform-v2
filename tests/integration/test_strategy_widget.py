@@ -221,3 +221,33 @@ def test_dashboard_strategy_widget_link_to_detail(client, auth_user):
     assert r.status_code == 200
     assert f"/{slug}/reports/{created['id']}" in r.text
     assert "看完整" in r.text
+
+
+# ------------------------------------------------------------------
+# Report detail page — nested metrics must not overflow / dump raw repr
+# ------------------------------------------------------------------
+
+
+def test_report_detail_renders_nested_metrics_without_raw_repr(client, auth_user):
+    """STRATEGY_MONTHLY metrics are nested (score dict, actions list).
+
+    The detail page sidebar must render them cleanly, not dump the raw
+    Python dict/list repr (which overflows the layout).
+    """
+    user_id, slug = auth_user
+    headers = _h(user_id)
+    created = _create_strategy(client, headers)
+
+    r = client.get(f"/{slug}/reports/{created['id']}", headers=headers)
+    assert r.status_code == 200
+    # raw dict-repr signatures must NOT appear
+    assert "'overall':" not in r.text
+    assert "'risk':" not in r.text
+    assert "'direction':" not in r.text
+    # nested score dict renders its scalar children with dotted keys
+    assert "score.overall" in r.text
+    # list-valued metrics render as a count, not the raw list
+    # (_create_strategy fixture has 3 actions)
+    assert "3 項" in r.text
+    # report type label localised
+    assert "月度戰略" in r.text

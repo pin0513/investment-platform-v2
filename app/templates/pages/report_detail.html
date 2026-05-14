@@ -18,6 +18,7 @@
           {% if report.report_type == "WEEKLY" %}週報
           {% elif report.report_type == "MONTHLY" %}月報
           {% elif report.report_type == "DAILY" %}日報
+          {% elif report.report_type == "STRATEGY_MONTHLY" %}月度戰略
           {% elif report.report_type == "CUSTOM" %}自訂報告
           {% else %}{{ report.report_type }}{% endif %}
         </h1>
@@ -122,16 +123,34 @@
       </dl>
     </div>
 
-    {# Metrics card #}
+    {# Metrics card — handles flat scalars, nested dicts (e.g. score), and
+       list values (e.g. actions/themes) without dumping raw repr that
+       overflows the sidebar. Full detail lives in content_md. #}
     {% if report.metrics %}
     <div class="rounded-lg bg-white p-4 shadow">
       <h2 class="mb-3 text-sm font-semibold text-slate-900">指標</h2>
       <dl class="space-y-2 text-xs">
         {% for k, v in report.metrics.items() %}
-        <div class="flex justify-between gap-2">
-          <dt class="text-slate-500 truncate">{{ k }}</dt>
-          <dd class="font-medium text-right">{{ v }}</dd>
-        </div>
+          {% if v is mapping %}
+            {% for sk, sv in v.items() %}
+              {% if sv is not none %}
+              <div class="flex justify-between gap-2">
+                <dt class="min-w-0 truncate text-slate-500">{{ k }}.{{ sk }}</dt>
+                <dd class="text-right font-medium">{{ sv }}</dd>
+              </div>
+              {% endif %}
+            {% endfor %}
+          {% elif v is iterable and v is not string %}
+          <div class="flex justify-between gap-2">
+            <dt class="min-w-0 truncate text-slate-500">{{ k }}</dt>
+            <dd class="text-right font-medium">{{ v | length }} 項</dd>
+          </div>
+          {% elif v is not none %}
+          <div class="flex justify-between gap-2">
+            <dt class="min-w-0 truncate text-slate-500">{{ k }}</dt>
+            <dd class="min-w-0 break-words text-right font-medium">{{ v }}</dd>
+          </div>
+          {% endif %}
         {% endfor %}
       </dl>
     </div>
