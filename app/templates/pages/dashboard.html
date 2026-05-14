@@ -32,6 +32,33 @@
   {% endwith %}
 </div>
 
+<div class="mb-6 rounded-lg bg-white p-4 shadow">
+  <div class="mb-2 flex items-center justify-between">
+    <h2 class="text-base font-semibold text-slate-900">📝 最新週報</h2>
+    <a href="/{{ user.slug }}/reports" class="text-xs text-blue-600 hover:underline">看全部 →</a>
+  </div>
+  {% if latest_weekly %}
+    <div class="text-sm">
+      <a href="/{{ user.slug }}/reports/{{ latest_weekly.id }}" class="text-lg font-medium text-slate-900 hover:underline">
+        {{ latest_weekly.period_start.strftime("%Y-%m-%d") }} - {{ latest_weekly.period_end.strftime("%Y-%m-%d") }} 週報
+      </a>
+      <p class="mt-1 text-xs text-slate-500">
+        狀態: <span class="rounded bg-slate-100 px-1.5 py-0.5">{{ latest_weekly.status }}</span>
+        {% if latest_weekly.generated_at %}· 產出: {{ latest_weekly.generated_at.strftime("%Y-%m-%d %H:%M") }}{% endif %}
+      </p>
+      {% if latest_weekly.summary_md %}
+      <p class="mt-2 text-sm text-slate-700 line-clamp-3">{{ latest_weekly.summary_md }}</p>
+      {% endif %}
+    </div>
+  {% else %}
+    <p class="text-sm text-slate-400">
+      尚無週報。透過
+      <a href="/{{ user.slug }}/reports" class="text-blue-600 hover:underline">/reports</a>
+      頁面手動上傳，或下次 Claude Code 跑 weekly research 時自動產出。
+    </p>
+  {% endif %}
+</div>
+
 <div class="mt-8 rounded-lg bg-white p-4 shadow">
   <div class="mb-3 flex items-center justify-between">
     <h2 class="text-base font-semibold text-slate-900">前 10 大持倉</h2>

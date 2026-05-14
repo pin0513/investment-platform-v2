@@ -17,6 +17,7 @@ from app.models import (  # noqa: F401
     instrument,
     quote,  # new
     refresh_token,
+    report,  # new P2.6
     transaction,  # new
     user,
 )
