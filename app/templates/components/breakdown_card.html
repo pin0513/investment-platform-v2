@@ -1,0 +1,23 @@
+{# Usage: {% include "components/breakdown_card.html" with title="按類別", groups=summary.by_asset_class, canvas_id="donut-class" %} #}
+<div class="rounded-lg bg-white p-4 shadow">
+  <h3 class="mb-3 text-sm font-medium text-slate-500">{{ title }}</h3>
+  {% if groups %}
+  <div class="relative h-48 sm:h-56">
+    <canvas id="{{ canvas_id }}"
+            data-donut='{{ groups | tojson }}'></canvas>
+  </div>
+  <div class="mt-3 space-y-1 text-xs">
+    {% for g in groups %}
+    <div class="flex items-center justify-between">
+      <span class="text-slate-600">{{ g.label }}</span>
+      <span class="num text-slate-900">{{ g.value | currency_fmt(base_currency) }} ({{ g.pct }}%)</span>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => IPV2.donut('{{ canvas_id }}', 'donut'));
+  </script>
+  {% else %}
+  <p class="text-sm text-slate-400">尚無資料</p>
+  {% endif %}
+</div>
