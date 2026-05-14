@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 from fastapi.templating import Jinja2Templates
 
@@ -41,12 +43,31 @@ def pct_fmt(value: Decimal | float | None, ndigits: int = 2) -> str:
     return f"{sign}{pct:.{ndigits}f}%"
 
 
+def _json_default(obj: Any) -> Any:
+    """Fallback serializer for Pydantic models, Decimal, datetime, UUID, etc."""
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump(mode="json")
+    if isinstance(obj, Decimal):
+        return str(obj)
+    if hasattr(obj, "isoformat"):
+        return obj.isoformat()
+    if hasattr(obj, "__dict__"):
+        return obj.__dict__
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
+def tojson_pydantic(value: Any) -> str:
+    """Pydantic-aware tojson filter for Jinja templates."""
+    return json.dumps(value, default=_json_default, ensure_ascii=False)
+
+
 def build_templates() -> Jinja2Templates:
     """Returns a configured Jinja2Templates instance."""
     template_dir = Path(__file__).parent / "templates"
     templates = Jinja2Templates(directory=str(template_dir))
     templates.env.filters["currency_fmt"] = currency_fmt
     templates.env.filters["pct_fmt"] = pct_fmt
+    templates.env.filters["tojson"] = tojson_pydantic  # override default
     templates.env.globals["app_version"] = "0.3.0"
     return templates
 

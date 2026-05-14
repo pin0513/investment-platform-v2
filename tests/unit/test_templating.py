@@ -33,3 +33,17 @@ def test_pct_fmt_zero():
 
 def test_pct_fmt_none():
     assert pct_fmt(None) == "—"
+
+
+def test_tojson_pydantic_model():
+    import json
+    from decimal import Decimal
+
+    from app.schemas.portfolio import GroupValue
+    from app.templating import tojson_pydantic
+
+    g = GroupValue(label="ETF", value=Decimal("123.45"), pct=10.0, count=2)
+    j = tojson_pydantic([g])
+    d = json.loads(j)
+    assert d[0]["label"] == "ETF"
+    assert d[0]["value"] == "123.45"
