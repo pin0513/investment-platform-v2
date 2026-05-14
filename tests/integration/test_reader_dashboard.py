@@ -72,3 +72,14 @@ def test_dashboard_shows_total_value(client, auth_user):
     assert r.status_code == 200
     # Total value placeholder should appear somewhere
     assert "Net Worth" in r.text or "總資產" in r.text or "NT$" in r.text
+
+
+def test_dashboard_analyses_widget_renders(client, auth_user):
+    """Dashboard renders the analyses widget even when no analyses exist."""
+    user_id, slug = auth_user
+    r = client.get(f"/{slug}/", headers=_h(user_id))
+    assert r.status_code == 200
+    # Widget heading should be present
+    assert "最新分析" in r.text
+    # Empty-state message should be present when no analyses
+    assert "尚無分析" in r.text or "個標的有分析" in r.text
