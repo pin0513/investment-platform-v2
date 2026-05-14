@@ -1,0 +1,42 @@
+{# Args: holdings, base_currency, slug, show_account=True #}
+<div class="overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="text-left text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        <th class="py-2">標的</th>
+        {% if show_account|default(True) %}<th class="py-2">帳戶</th>{% endif %}
+        <th class="num py-2">數量</th>
+        <th class="num py-2">均成本</th>
+        <th class="num py-2">現價</th>
+        <th class="num py-2">市值 ({{ base_currency }})</th>
+        <th class="num py-2">P&L</th>
+        <th class="num py-2">%</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for h in holdings %}
+      <tr>
+        <td class="py-2">
+          <a href="/{{ slug }}/instruments/{{ h.symbol }}" class="text-slate-900 hover:underline">{{ h.symbol }}</a>
+          <span class="text-xs text-slate-400">{{ h.instrument_name or "" }}</span>
+          {% if h.stale %}<span class="ml-1 rounded bg-amber-100 px-1 text-xs text-amber-700">stale</span>{% endif %}
+        </td>
+        {% if show_account|default(True) %}<td class="py-2 text-xs text-slate-500">{{ h.account_name }}</td>{% endif %}
+        <td class="num py-2">{{ h.quantity }}</td>
+        <td class="num py-2">{{ h.avg_cost | currency_fmt(h.currency, 4) }}</td>
+        <td class="num py-2">{{ h.last_price | currency_fmt(h.currency, 4) }}</td>
+        <td class="num py-2">{{ h.value_in_base | currency_fmt(base_currency) }}</td>
+        <td class="num py-2 {% if h.unrealized_pnl_in_base and h.unrealized_pnl_in_base > 0 %}pos{% elif h.unrealized_pnl_in_base and h.unrealized_pnl_in_base < 0 %}neg{% endif %}">
+          {{ h.unrealized_pnl_in_base | currency_fmt(base_currency) }}
+        </td>
+        <td class="num py-2 {% if h.unrealized_pnl_in_base and h.unrealized_pnl_in_base > 0 %}pos{% elif h.unrealized_pnl_in_base and h.unrealized_pnl_in_base < 0 %}neg{% endif %}">
+          {% if h.unrealized_pnl_in_base and h.value_in_base and h.value_in_base > 0 %}
+            {% set cost = h.value_in_base - h.unrealized_pnl_in_base %}
+            {% if cost > 0 %}{{ (h.unrealized_pnl_in_base / cost) | pct_fmt }}{% else %}—{% endif %}
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

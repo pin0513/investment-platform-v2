@@ -1,0 +1,14 @@
+{# Group holdings by accounts[*].metadata.owner #}
+<div class="space-y-4">
+  {% for owner_label, group in owner_groups.items() %}
+  <div class="rounded-lg bg-white p-4 shadow">
+    <div class="mb-2 flex items-center justify-between">
+      <h3 class="font-medium text-slate-900">擁有人: {{ owner_label }}</h3>
+      <span class="num text-sm text-slate-600">{{ group.total | currency_fmt(summary.base_currency) }} ({{ group.pct }}%)</span>
+    </div>
+    {% with holdings=group.holdings, base_currency=summary.base_currency, slug=user.slug %}
+      {% include "components/holdings_table.html" %}
+    {% endwith %}
+  </div>
+  {% endfor %}
+</div>

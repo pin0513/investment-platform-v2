@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ user.slug }} - 持倉{% endblock %}
+{% block content %}
+
+<h1 class="mb-4 text-2xl font-semibold text-slate-900">持倉 ({{ summary.holdings | length }})</h1>
+
+<div class="mb-4 flex flex-wrap gap-2">
+  <button class="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white"
+          hx-get="/{{ user.slug }}/portfolio?tab=class"
+          hx-target="#tab-content" hx-push-url="false">類別</button>
+  <button class="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 border border-slate-200"
+          hx-get="/{{ user.slug }}/portfolio?tab=account"
+          hx-target="#tab-content" hx-push-url="false">帳戶</button>
+  <button class="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 border border-slate-200"
+          hx-get="/{{ user.slug }}/portfolio?tab=industry"
+          hx-target="#tab-content" hx-push-url="false">產業</button>
+  <button class="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 border border-slate-200"
+          hx-get="/{{ user.slug }}/portfolio?tab=owner"
+          hx-target="#tab-content" hx-push-url="false">擁有人</button>
+</div>
+
+<div id="tab-content">
+  {% include "fragments/portfolio_tab_class.html" %}
+</div>
+
+{% endblock %}
