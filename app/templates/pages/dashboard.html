@@ -2,6 +2,8 @@
 {% block title %}{{ user.slug }} - 總覽{% endblock %}
 {% block content %}
 
+{% include "components/strategy_card.html" %}
+
 <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
   <div>
     <p class="text-xs uppercase tracking-wide text-slate-500">總資產 (Net Worth)</p>

@@ -6,7 +6,14 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-REPORT_TYPES = Literal["DAILY", "WEEKLY", "MONTHLY", "CUSTOM", "AD_HOC"]
+REPORT_TYPES = Literal[
+    "DAILY",
+    "WEEKLY",
+    "MONTHLY",
+    "CUSTOM",
+    "AD_HOC",
+    "STRATEGY_MONTHLY",
+]
 REPORT_STATUSES = Literal["PENDING", "DRAFT", "FINAL", "ARCHIVED"]
 NEWS_DETAIL_LEVELS = Literal["HEADLINE", "SUMMARY", "DETAILED", "FULL"]
 
