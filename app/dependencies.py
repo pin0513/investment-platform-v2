@@ -102,16 +102,22 @@ def get_current_user_for_html(
 
     user_id_str = parsed.get("sub")
     if not user_id_str:
-        return RedirectResponse(url=f"/auth/login?next={_urlquote(request.url.path)}", status_code=303)
+        return RedirectResponse(
+            url=f"/auth/login?next={_urlquote(request.url.path)}", status_code=303
+        )
 
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
-        return RedirectResponse(url=f"/auth/login?next={_urlquote(request.url.path)}", status_code=303)
+        return RedirectResponse(
+            url=f"/auth/login?next={_urlquote(request.url.path)}", status_code=303
+        )
 
     user = UserRepository(db).get_by_id(user_id)
     if user is None or not user.is_active:
-        return RedirectResponse(url=f"/auth/login?next={_urlquote(request.url.path)}", status_code=303)
+        return RedirectResponse(
+            url=f"/auth/login?next={_urlquote(request.url.path)}", status_code=303
+        )
     return user
 
 

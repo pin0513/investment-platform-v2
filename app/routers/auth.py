@@ -11,7 +11,6 @@ from starlette.responses import HTMLResponse
 from app.config import get_settings
 from app.db import get_db
 from app.dependencies import get_current_user
-from app.templating import get_templates
 from app.models.user import User
 from app.repositories.allowlisted_email import AllowlistedEmailRepository
 from app.repositories.user import UserRepository
@@ -29,6 +28,7 @@ from app.services.auth import (
     InvalidCredentialsError,
     InvalidRefreshTokenError,
 )
+from app.templating import get_templates
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

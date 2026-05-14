@@ -1,5 +1,3 @@
-import pytest
-from fastapi import HTTPException
 from starlette.responses import RedirectResponse
 
 from app.dependencies import _html_auth_or_redirect

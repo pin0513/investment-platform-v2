@@ -9,7 +9,11 @@ from app.models.user import User
 
 def _user(slug):
     return User(
-        id=uuid.uuid4(), email=f"{slug}@x.z", slug=slug, role="USER", is_active=True,
+        id=uuid.uuid4(),
+        email=f"{slug}@x.z",
+        slug=slug,
+        role="USER",
+        is_active=True,
     )
 
 

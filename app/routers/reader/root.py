@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, Header, Request, Response
+from fastapi import APIRouter, Cookie, Depends, Header
 from jose import JWTError
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
@@ -25,7 +25,7 @@ def root_redirect(
 
     token = None
     if authorization and authorization.startswith("Bearer "):
-        token = authorization[len("Bearer "):]
+        token = authorization[len("Bearer ") :]
     elif session:
         token = session
 
@@ -45,7 +45,11 @@ def root_redirect(
 def logout_and_redirect():
     response = RedirectResponse(url="/auth/login", status_code=303)
     response.set_cookie(
-        key="__session", value="", max_age=0,
-        httponly=True, secure=True, samesite="lax",
+        key="__session",
+        value="",
+        max_age=0,
+        httponly=True,
+        secure=True,
+        samesite="lax",
     )
     return response
