@@ -1,9 +1,11 @@
 import os
 import uuid
+import uuid as _uuid
 
 import pytest
 
 from app.db import session_scope
+from app.models.account import Account
 from app.models.user import User
 from app.security import create_access_token, hash_password
 
@@ -18,13 +20,21 @@ def auth_user():
     user_id = uuid.uuid4()
     slug = f"pf{uuid.uuid4().hex[:8]}"
     with session_scope() as s:
-        s.add(User(
-            id=user_id, email=f"{slug}@x.z", slug=slug, role="USER",
-            password_hash=hash_password("pw"), is_active=True, base_currency="TWD",
-        ))
+        s.add(
+            User(
+                id=user_id,
+                email=f"{slug}@x.z",
+                slug=slug,
+                role="USER",
+                password_hash=hash_password("pw"),
+                is_active=True,
+                base_currency="TWD",
+            )
+        )
     yield user_id, slug
     with session_scope() as s:
         from app.models.refresh_token import RefreshToken
+
         s.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
         s.query(User).filter(User.id == user_id).delete()
 
@@ -76,18 +86,16 @@ def test_portfolio_unknown_tab_defaults_to_class(client, auth_user):
     assert r.status_code == 200
 
 
-import uuid as _uuid
-
-from app.models.account import Account
-
-
 def test_account_detail_renders(client, auth_user):
     user_id, slug = auth_user
     # Create an account for this user
     with session_scope() as s:
         acc = Account(
-            id=_uuid.uuid4(), user_id=user_id, name="TestAcct",
-            account_type="BROKER_STOCK", currency="USD",
+            id=_uuid.uuid4(),
+            user_id=user_id,
+            name="TestAcct",
+            account_type="BROKER_STOCK",
+            currency="USD",
         )
         s.add(acc)
         s.flush()

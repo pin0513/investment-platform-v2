@@ -21,17 +21,30 @@ def auth_user_with_instrument():
     sym = f"RDR{uuid.uuid4().hex[:6].upper()}"
     inst_id = uuid.uuid4()
     with session_scope() as s:
-        s.add(User(
-            id=user_id, email=f"{slug}@x.z", slug=slug, role="USER",
-            password_hash=hash_password("pw"), is_active=True,
-        ))
-        s.add(Instrument(
-            id=inst_id, symbol=sym, asset_class="EQUITY", currency="USD",
-            market="NASDAQ", name="Test Co.",
-        ))
+        s.add(
+            User(
+                id=user_id,
+                email=f"{slug}@x.z",
+                slug=slug,
+                role="USER",
+                password_hash=hash_password("pw"),
+                is_active=True,
+            )
+        )
+        s.add(
+            Instrument(
+                id=inst_id,
+                symbol=sym,
+                asset_class="EQUITY",
+                currency="USD",
+                market="NASDAQ",
+                name="Test Co.",
+            )
+        )
     yield user_id, slug, sym, inst_id
     with session_scope() as s:
         from app.models.refresh_token import RefreshToken
+
         s.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
         s.query(Instrument).filter(Instrument.id == inst_id).delete()
         s.query(User).filter(User.id == user_id).delete()

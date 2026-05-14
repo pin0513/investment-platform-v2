@@ -18,14 +18,21 @@ def auth_user():
     user_id = uuid.uuid4()
     slug = f"dash{uuid.uuid4().hex[:8]}"
     with session_scope() as s:
-        s.add(User(
-            id=user_id, email=f"{slug}@x.z", slug=slug, role="USER",
-            password_hash=hash_password("pw"), is_active=True,
-            base_currency="TWD",
-        ))
+        s.add(
+            User(
+                id=user_id,
+                email=f"{slug}@x.z",
+                slug=slug,
+                role="USER",
+                password_hash=hash_password("pw"),
+                is_active=True,
+                base_currency="TWD",
+            )
+        )
     yield user_id, slug
     with session_scope() as s:
         from app.models.refresh_token import RefreshToken
+
         s.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
         s.query(User).filter(User.id == user_id).delete()
 

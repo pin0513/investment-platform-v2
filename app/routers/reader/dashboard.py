@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
@@ -21,7 +21,7 @@ def dashboard(
     slug: str,
     request: Request,
     db: Annotated[Session, Depends(get_db)],
-    user_or_redirect=Depends(get_current_user_for_html),
+    user_or_redirect: Annotated[Any, Depends(get_current_user_for_html)] = None,
 ):
     if isinstance(user_or_redirect, RedirectResponse):
         return user_or_redirect

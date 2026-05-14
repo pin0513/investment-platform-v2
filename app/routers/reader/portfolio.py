@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import uuid as _uuid
 from collections import defaultdict
 from decimal import Decimal
-from typing import Annotated
+from decimal import Decimal as _Decimal
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse, RedirectResponse
 
@@ -20,10 +22,10 @@ router = APIRouter(tags=["reader"], include_in_schema=False)
 
 
 _FRAGMENT_TEMPLATES = {
-    "class":    "fragments/portfolio_tab_class.html",
-    "account":  "fragments/portfolio_tab_account.html",
+    "class": "fragments/portfolio_tab_class.html",
+    "account": "fragments/portfolio_tab_account.html",
     "industry": "fragments/portfolio_tab_industry.html",
-    "owner":    "fragments/portfolio_tab_owner.html",
+    "owner": "fragments/portfolio_tab_owner.html",
 }
 
 
@@ -31,13 +33,10 @@ def _build_owner_groups(summary, db: Session, user_id) -> dict:
     """Group holdings by account.metadata.owner."""
     # Fetch user's active accounts to read metadata
     accounts = {
-        a.id: a for a in db.query(Account).filter(
-            Account.user_id == user_id, Account.deleted_at.is_(None)
-        )
+        a.id: a
+        for a in db.query(Account).filter(Account.user_id == user_id, Account.deleted_at.is_(None))
     }
-    groups: dict[str, dict] = defaultdict(
-        lambda: {"holdings": [], "total": Decimal("0")}
-    )
+    groups: dict[str, dict] = defaultdict(lambda: {"holdings": [], "total": Decimal("0")})
     for h in summary.holdings:
         acc = accounts.get(h.account_id)
         owner = (acc.metadata_json or {}).get("owner", "unlabeled") if acc else "unlabeled"
@@ -59,7 +58,7 @@ def portfolio(
     db: Annotated[Session, Depends(get_db)],
     tab: str = "class",
     hx_request: Annotated[str | None, Header(alias="HX-Request")] = None,
-    user_or_redirect=Depends(get_current_user_for_html),
+    user_or_redirect: Annotated[Any, Depends(get_current_user_for_html)] = None,
 ):
     if isinstance(user_or_redirect, RedirectResponse):
         return user_or_redirect
@@ -85,30 +84,28 @@ def portfolio(
     return get_templates().TemplateResponse(template, context)
 
 
-import uuid as _uuid
-from decimal import Decimal as _Decimal
-
-from fastapi import HTTPException
-
-
 @router.get("/{slug}/portfolio/{account_id}", response_class=HTMLResponse)
 def account_detail(
     slug: str,
     account_id: _uuid.UUID,
     request: Request,
     db: Annotated[Session, Depends(get_db)],
-    user_or_redirect=Depends(get_current_user_for_html),
+    user_or_redirect: Annotated[Any, Depends(get_current_user_for_html)] = None,
 ):
     if isinstance(user_or_redirect, RedirectResponse):
         return user_or_redirect
     user: User = user_or_redirect
     _verify_slug(slug, user)
 
-    acc = db.query(Account).filter(
-        Account.id == account_id,
-        Account.user_id == user.id,
-        Account.deleted_at.is_(None),
-    ).one_or_none()
+    acc = (
+        db.query(Account)
+        .filter(
+            Account.id == account_id,
+            Account.user_id == user.id,
+            Account.deleted_at.is_(None),
+        )
+        .one_or_none()
+    )
     if acc is None:
         raise HTTPException(404, "Account not found")
 
