@@ -1,0 +1,95 @@
+{# Strategy widget — portfolio-level prescriptive monthly review.
+   Usage: {% include "components/strategy_card.html" %} (expects `latest_strategy` + `user` in context) #}
+<div class="mb-6 rounded-lg bg-gradient-to-br from-indigo-50 via-white to-white p-4 shadow ring-1 ring-indigo-100">
+  {% if latest_strategy %}
+    {% set s = latest_strategy %}
+    {% set m = s.metrics or {} %}
+    {% set score = m.get("score") if m else None %}
+    {% set actions = m.get("actions", []) if m else [] %}
+    {% set tuning = m.get("tuning_round", 1) if m else 1 %}
+    {% set prev = m.get("prev_overall_score") if m else None %}
+
+    <div class="mb-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <h2 class="text-base font-semibold text-slate-900">📊 月度戰略</h2>
+        <span class="text-xs text-slate-500">{{ s.period_start.strftime("%Y-%m") }}</span>
+        {% if tuning and tuning > 1 %}
+          <span class="rounded bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700">
+            tuning #{{ tuning }}
+          </span>
+        {% endif %}
+        <span class="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono text-slate-600">{{ s.status }}</span>
+      </div>
+      <a href="/{{ user.slug }}/reports/{{ s.id }}" class="text-xs text-indigo-600 hover:underline">
+        看完整 →
+      </a>
+    </div>
+
+    {% if score and score.get("overall") is not none %}
+      <div class="mb-3 flex items-baseline gap-3">
+        <div class="flex items-baseline gap-1">
+          <span class="text-3xl font-bold text-slate-900">{{ score.overall }}</span>
+          <span class="text-sm text-slate-500">/ 100</span>
+        </div>
+        {% if prev is not none %}
+          {% set delta = score.overall - prev %}
+          <span class="text-xs font-medium
+            {% if delta > 0 %}text-emerald-600
+            {% elif delta < 0 %}text-red-600
+            {% else %}text-slate-500{% endif %}">
+            {% if delta > 0 %}↑+{{ delta }}{% elif delta < 0 %}↓{{ delta }}{% else %}─{% endif %}
+            <span class="text-slate-400">vs 上次</span>
+          </span>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if actions %}
+      <div class="mb-3">
+        <p class="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+          🎯 下一動作 ({{ actions | length }})
+        </p>
+        <ul class="space-y-1.5">
+          {% for a in actions %}
+            <li class="flex items-center gap-2 text-sm">
+              <span class="inline-flex w-16 justify-center rounded px-1.5 py-0.5 text-xs font-medium
+                {% if a.direction == 'ADD' %}bg-emerald-100 text-emerald-700
+                {% elif a.direction == 'TRIM' or a.direction == 'EXIT' %}bg-red-100 text-red-700
+                {% elif a.direction == 'REBALANCE' %}bg-amber-100 text-amber-700
+                {% else %}bg-slate-100 text-slate-700{% endif %}">
+                {% if a.direction == 'ADD' %}⬆ ADD
+                {% elif a.direction == 'TRIM' %}⬇ TRIM
+                {% elif a.direction == 'EXIT' %}✕ EXIT
+                {% elif a.direction == 'HOLD' %}⏸ HOLD
+                {% elif a.direction == 'REBALANCE' %}🔄 REBAL
+                {% else %}{{ a.direction }}{% endif %}
+              </span>
+              <span class="font-mono font-medium text-slate-900">{{ a.symbol }}</span>
+              {% if a.target_pct_change %}
+                <span class="text-xs text-slate-600">{{ "%+.1f"|format(a.target_pct_change) }}%</span>
+              {% endif %}
+              {% if a.confidence %}
+                <span class="rounded bg-slate-50 px-1 text-xs text-slate-500">{{ a.confidence }}</span>
+              {% endif %}
+              <span class="ml-1 flex-1 truncate text-xs text-slate-600">{{ a.rationale_short or "" }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if s.summary_md %}
+      <p class="text-xs leading-relaxed text-slate-600 line-clamp-3">{{ s.summary_md }}</p>
+    {% endif %}
+
+  {% else %}
+    <div class="text-center">
+      <h2 class="mb-1 text-base font-semibold text-slate-900">📊 月度戰略</h2>
+      <p class="text-xs text-slate-500">
+        尚無戰略報告。透過 skill 「投資戰略月度檢視」產生，或
+        <code class="rounded bg-slate-100 px-1">POST /api/v1/reports</code>
+        帶 <code class="rounded bg-slate-100 px-1">report_type=STRATEGY_MONTHLY</code>。
+      </p>
+    </div>
+  {% endif %}
+</div>

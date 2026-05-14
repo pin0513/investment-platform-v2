@@ -53,6 +53,7 @@ def dashboard(
     # Fetch recent reports for dashboard widget (up to 5, any type)
     report_svc = ReportService(db, audit)
     recent_reports, _ = report_svc.list(user.id, limit=5)
+    latest_strategy = report_svc.latest(user.id, "STRATEGY_MONTHLY")
 
     return get_templates().TemplateResponse(
         "pages/dashboard.html",
@@ -63,5 +64,6 @@ def dashboard(
             "top_holdings": top,
             "analyses_by_symbol": analyses_by_symbol,
             "recent_reports": recent_reports,
+            "latest_strategy": latest_strategy,
         },
     )

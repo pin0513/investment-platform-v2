@@ -29,8 +29,9 @@ class Report(Base, TimestampMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
-    report_type: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
-    # one of: DAILY / WEEKLY / MONTHLY / CUSTOM / AD_HOC
+    report_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    # one of: DAILY / WEEKLY / MONTHLY / CUSTOM / AD_HOC / STRATEGY_MONTHLY
+    # (STRATEGY_QUARTERLY / STRATEGY_ANNUAL reserved, not yet implemented)
     period_start: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
