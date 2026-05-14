@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ instrument.symbol }} · {{ instrument.name }}{% endblock %}
+{% block content %}
+
+<div class="mb-4">
+  <a href="/{{ user.slug }}/portfolio" class="text-sm text-blue-600 hover:underline">← 回持倉</a>
+</div>
+
+<div class="mb-6 rounded-lg bg-white p-4 shadow">
+  <h1 class="flex items-baseline gap-3 text-2xl font-semibold text-slate-900">
+    {{ instrument.symbol }}
+    <span class="text-sm font-normal text-slate-500">{{ instrument.name or "" }}</span>
+  </h1>
+  <p class="mt-1 text-sm text-slate-500">
+    {{ instrument.asset_class }} · {{ instrument.currency }} · {{ instrument.market or "—" }}
+  </p>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-3">
+    <div>
+      <p class="text-xs uppercase tracking-wide text-slate-500">當前報價</p>
+      {% if quote %}
+        <p class="num text-xl font-semibold">{{ quote.price | currency_fmt(instrument.currency, 4) }}</p>
+        <p class="text-xs text-slate-400">{{ quote.as_of.strftime("%Y-%m-%d") }} · {{ quote.source }}</p>
+      {% else %}
+        <p class="text-sm text-slate-400">無報價</p>
+      {% endif %}
+    </div>
+    {% if my_holding %}
+    <div>
+      <p class="text-xs uppercase tracking-wide text-slate-500">我的數量</p>
+      <p class="num text-xl font-semibold">{{ my_holding.quantity }}</p>
+      <p class="text-xs text-slate-500">均成本: {{ my_holding.avg_cost | currency_fmt(instrument.currency, 4) }}</p>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-wide text-slate-500">未實現損益</p>
+      {% if my_pnl is not none %}
+        <p class="num text-xl font-semibold {% if my_pnl > 0 %}pos{% elif my_pnl < 0 %}neg{% endif %}">
+          {{ my_pnl | currency_fmt(instrument.currency) }}
+        </p>
+      {% else %}
+        <p class="text-sm text-slate-400">—</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if recent_txns %}
+<div class="rounded-lg bg-white p-4 shadow">
+  <h2 class="mb-3 text-base font-semibold text-slate-900">近期交易</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-left text-xs uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="py-2">時間</th>
+          <th class="py-2">類型</th>
+          <th class="num py-2">數量</th>
+          <th class="num py-2">價格</th>
+          <th class="num py-2">總額</th>
+          <th class="py-2">幣別</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for t in recent_txns %}
+        <tr>
+          <td class="py-2 text-xs">{{ t.occurred_at.strftime("%Y-%m-%d") }}</td>
+          <td class="py-2 text-xs">{{ t.txn_type }}</td>
+          <td class="num py-2">{{ t.quantity or "—" }}</td>
+          <td class="num py-2">{{ t.price | currency_fmt(t.currency, 4) }}</td>
+          <td class="num py-2">{{ t.amount | currency_fmt(t.currency) }}</td>
+          <td class="py-2 text-xs">{{ t.currency }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<p class="mt-6 text-xs text-slate-400">
+  歷史 OHLC 圖表將在 P3 上線（daily backfill cron 啟用後）。
+</p>
+
+{% endblock %}
