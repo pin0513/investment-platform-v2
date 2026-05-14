@@ -7,7 +7,10 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import markdown_it
 from fastapi.templating import Jinja2Templates
+
+_md = markdown_it.MarkdownIt("commonmark", {"breaks": True, "linkify": True})
 
 _SYMBOLS = {
     "TWD": "NT$",
@@ -61,6 +64,13 @@ def tojson_pydantic(value: Any) -> str:
     return json.dumps(value, default=_json_default, ensure_ascii=False)
 
 
+def md_to_html(text: str | None) -> str:
+    """Render Markdown text to safe HTML using markdown-it-py."""
+    if not text:
+        return ""
+    return _md.render(text)
+
+
 def build_templates() -> Jinja2Templates:
     """Returns a configured Jinja2Templates instance."""
     template_dir = Path(__file__).parent / "templates"
@@ -68,6 +78,7 @@ def build_templates() -> Jinja2Templates:
     templates.env.filters["currency_fmt"] = currency_fmt
     templates.env.filters["pct_fmt"] = pct_fmt
     templates.env.filters["tojson"] = tojson_pydantic  # override default
+    templates.env.filters["md_to_html"] = md_to_html
     templates.env.globals["app_version"] = "0.3.0"
     return templates
 

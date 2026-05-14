@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ user.slug }} - 週報{% endblock %}
+{% block content %}
+
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-slate-900">投資報告</h1>
+  <span class="text-sm text-slate-500">{{ total }} 份報告</span>
+</div>
+
+{# Type filter tabs #}
+<div class="mb-6 flex gap-2">
+  {% for tab_type, tab_label in [("ALL", "全部"), ("WEEKLY", "週報"), ("MONTHLY", "月報"), ("AD_HOC", "臨時")] %}
+  <a href="/{{ user.slug }}/reports{% if tab_type != 'ALL' %}?report_type={{ tab_type }}{% endif %}"
+     class="rounded-md px-3 py-1.5 text-sm font-medium
+     {% if active_type == tab_type %}bg-slate-900 text-white{% else %}bg-white text-slate-600 hover:bg-slate-100 border border-slate-200{% endif %}">
+    {{ tab_label }}
+  </a>
+  {% endfor %}
+</div>
+
+{% if reports %}
+<div class="space-y-4">
+  {% for r in reports %}
+  <div class="rounded-lg bg-white p-4 shadow">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex-1 min-w-0">
+        <a href="/{{ user.slug }}/reports/{{ r.id }}"
+           class="text-base font-semibold text-slate-900 hover:underline">
+          {{ r.period_start.strftime("%Y-%m-%d") }} – {{ r.period_end.strftime("%Y-%m-%d") }}
+          {% if r.report_type == "WEEKLY" %}週報
+          {% elif r.report_type == "MONTHLY" %}月報
+          {% elif r.report_type == "DAILY" %}日報
+          {% elif r.report_type == "CUSTOM" %}自訂報告
+          {% else %}{{ r.report_type }}{% endif %}
+        </a>
+        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span class="rounded px-1.5 py-0.5
+            {% if r.status == 'FINAL' %}bg-green-100 text-green-700
+            {% elif r.status == 'DRAFT' %}bg-blue-100 text-blue-700
+            {% elif r.status == 'PENDING' %}bg-amber-100 text-amber-700
+            {% elif r.status == 'ARCHIVED' %}bg-slate-100 text-slate-500
+            {% else %}bg-slate-100 text-slate-500{% endif %}">
+            {{ r.status }}
+          </span>
+          {% if r.generated_at %}
+          <span>產出: {{ r.generated_at.strftime("%Y-%m-%d %H:%M") }}</span>
+          {% endif %}
+          {% if r.llm_model %}
+          <span>{{ r.llm_model }}</span>
+          {% endif %}
+        </div>
+        {% if r.summary_md %}
+        <p class="mt-2 text-sm text-slate-700 line-clamp-3">{{ r.summary_md }}</p>
+        {% endif %}
+      </div>
+      <a href="/{{ user.slug }}/reports/{{ r.id }}"
+         class="shrink-0 rounded bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200">
+        查看 →
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="rounded-lg bg-white p-8 text-center shadow">
+  <p class="text-slate-400">尚無報告。</p>
+  <p class="mt-2 text-sm text-slate-400">
+    透過 <code class="rounded bg-slate-100 px-1">POST /api/v1/reports</code> 上傳 AI 產出的報告。
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

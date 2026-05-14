@@ -12,6 +12,7 @@ from app.dependencies import _verify_slug, get_current_user_for_html
 from app.models.user import User
 from app.services.analysis import AnalysisService
 from app.services.portfolio import PortfolioService
+from app.services.report import ReportService
 from app.templating import get_templates
 
 router = APIRouter(tags=["reader"], include_in_schema=False)
@@ -49,6 +50,10 @@ def dashboard(
         if items:
             analyses_by_symbol[h.symbol] = items
 
+    # Fetch latest weekly report for dashboard widget
+    report_svc = ReportService(db, audit)
+    latest_weekly = report_svc.latest(user.id, "WEEKLY")
+
     return get_templates().TemplateResponse(
         "pages/dashboard.html",
         {
@@ -57,5 +62,6 @@ def dashboard(
             "summary": summary,
             "top_holdings": top,
             "analyses_by_symbol": analyses_by_symbol,
+            "latest_weekly": latest_weekly,
         },
     )

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}{{ user.slug }} - 報告詳情{% endblock %}
+{% block content %}
+
+{# Back link #}
+<div class="mb-4">
+  <a href="/{{ user.slug }}/reports" class="text-sm text-blue-600 hover:underline">← 回報告列表</a>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+
+  {# Main content column #}
+  <div class="lg:col-span-2">
+    <div class="rounded-lg bg-white p-6 shadow">
+      <div class="mb-4">
+        <h1 class="text-xl font-semibold text-slate-900">
+          {{ report.period_start.strftime("%Y-%m-%d") }} – {{ report.period_end.strftime("%Y-%m-%d") }}
+          {% if report.report_type == "WEEKLY" %}週報
+          {% elif report.report_type == "MONTHLY" %}月報
+          {% elif report.report_type == "DAILY" %}日報
+          {% elif report.report_type == "CUSTOM" %}自訂報告
+          {% else %}{{ report.report_type }}{% endif %}
+        </h1>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span class="rounded px-1.5 py-0.5
+            {% if report.status == 'FINAL' %}bg-green-100 text-green-700
+            {% elif report.status == 'DRAFT' %}bg-blue-100 text-blue-700
+            {% elif report.status == 'PENDING' %}bg-amber-100 text-amber-700
+            {% elif report.status == 'ARCHIVED' %}bg-slate-100 text-slate-500
+            {% else %}bg-slate-100 text-slate-500{% endif %}">
+            {{ report.status }}
+          </span>
+          {% if report.generated_at %}
+          <span>產出: {{ report.generated_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          {% endif %}
+          {% if report.uploaded_at %}
+          <span>上傳: {{ report.uploaded_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Summary #}
+      {% if report.summary_md %}
+      <div class="mb-6 rounded-md bg-blue-50 p-4">
+        <h2 class="mb-2 text-sm font-semibold text-blue-700">摘要</h2>
+        <div class="prose prose-sm max-w-none text-blue-900">{{ report.summary_md | md_to_html | safe }}</div>
+      </div>
+      {% endif %}
+
+      {# Content #}
+      {% if report.content_md %}
+      <div class="prose prose-slate max-w-none">
+        {{ report.content_md | md_to_html | safe }}
+      </div>
+      {% else %}
+      <p class="text-sm text-slate-400">尚無報告內容。</p>
+      {% endif %}
+
+      {# Status update buttons #}
+      <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4">
+        {% if report.status != 'FINAL' %}
+        <form method="post" action="/api/v1/reports/{{ report.id }}" class="inline">
+          <input type="hidden" name="_method" value="PATCH" />
+          <button type="button"
+                  onclick="patchStatus('{{ report.id }}', 'FINAL')"
+                  class="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700">
+            標記為 FINAL
+          </button>
+        </form>
+        {% endif %}
+        {% if report.status != 'DRAFT' and report.status != 'ARCHIVED' %}
+        <button type="button"
+                onclick="patchStatus('{{ report.id }}', 'DRAFT')"
+                class="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+          退回 DRAFT
+        </button>
+        {% endif %}
+        {% if report.status != 'ARCHIVED' %}
+        <button type="button"
+                onclick="patchStatus('{{ report.id }}', 'ARCHIVED')"
+                class="rounded bg-slate-400 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-500">
+          封存
+        </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# Sidebar #}
+  <div class="space-y-4">
+
+    {# Metadata card #}
+    <div class="rounded-lg bg-white p-4 shadow">
+      <h2 class="mb-3 text-sm font-semibold text-slate-900">元資料</h2>
+      <dl class="space-y-2 text-xs">
+        <div>
+          <dt class="text-slate-500">類型</dt>
+          <dd class="font-medium">{{ report.report_type }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">版本</dt>
+          <dd class="font-medium">v{{ report.version }}</dd>
+        </div>
+        {% if report.llm_model %}
+        <div>
+          <dt class="text-slate-500">LLM 模型</dt>
+          <dd class="font-mono">{{ report.llm_model }}</dd>
+        </div>
+        {% endif %}
+        {% if report.llm_provider %}
+        <div>
+          <dt class="text-slate-500">提供者</dt>
+          <dd>{{ report.llm_provider }}</dd>
+        </div>
+        {% endif %}
+        {% if report.news_detail_level %}
+        <div>
+          <dt class="text-slate-500">新聞詳細度</dt>
+          <dd>{{ report.news_detail_level }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+    </div>
+
+    {# Metrics card #}
+    {% if report.metrics %}
+    <div class="rounded-lg bg-white p-4 shadow">
+      <h2 class="mb-3 text-sm font-semibold text-slate-900">指標</h2>
+      <dl class="space-y-2 text-xs">
+        {% for k, v in report.metrics.items() %}
+        <div class="flex justify-between gap-2">
+          <dt class="text-slate-500 truncate">{{ k }}</dt>
+          <dd class="font-medium text-right">{{ v }}</dd>
+        </div>
+        {% endfor %}
+      </dl>
+    </div>
+    {% endif %}
+
+    {# Related instruments #}
+    {% if report.related_instruments %}
+    <div class="rounded-lg bg-white p-4 shadow">
+      <h2 class="mb-3 text-sm font-semibold text-slate-900">相關標的</h2>
+      <div class="flex flex-wrap gap-1.5">
+        {% for sym in report.related_instruments %}
+        <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-700">{{ sym }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Timeline #}
+    {% if report.timeline %}
+    <div class="rounded-lg bg-white p-4 shadow">
+      <h2 class="mb-3 text-sm font-semibold text-slate-900">時間軸</h2>
+      <div class="space-y-2">
+        {% for event in report.timeline %}
+        <div class="border-l-2 border-slate-200 pl-3 text-xs">
+          {% if event.get("ts") or event.get("time") %}
+          <p class="text-slate-400">{{ event.get("ts") or event.get("time") }}</p>
+          {% endif %}
+          <p class="text-slate-700">{{ event.get("label") or event.get("event") or event | tojson }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>{# end sidebar #}
+</div>{# end grid #}
+
+<script>
+function patchStatus(reportId, newStatus) {
+  fetch('/api/v1/reports/' + reportId, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({status: newStatus}),
+  })
+  .then(r => {
+    if (r.ok) { location.reload(); }
+    else { r.json().then(j => alert('Error: ' + JSON.stringify(j))); }
+  })
+  .catch(err => alert('Request failed: ' + err));
+}
+</script>
+
+{% endblock %}
