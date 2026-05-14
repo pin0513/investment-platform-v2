@@ -1,0 +1,3 @@
+{% with txns=txns, slug=user.slug, base_currency=user.base_currency %}
+  {% include "components/transactions_table.html" %}
+{% endwith %}

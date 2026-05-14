@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ user.slug }} - 交易紀錄{% endblock %}
+{% block content %}
+
+<div class="mb-4 flex flex-wrap items-end justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-slate-900">交易紀錄</h1>
+  <a href="/{{ user.slug }}/transactions?format=csv{% if from_date %}&from={{ from_date }}{% endif %}{% if to_date %}&to={{ to_date }}{% endif %}"
+     class="rounded bg-white px-3 py-1.5 text-sm text-slate-700 border border-slate-200 hover:bg-slate-50">
+    匯出 CSV
+  </a>
+</div>
+
+<form class="mb-4 flex flex-wrap items-end gap-2"
+      hx-get="/{{ user.slug }}/transactions"
+      hx-target="#tx-rows"
+      hx-trigger="change, submit"
+      hx-push-url="false">
+  <label class="block text-xs text-slate-500">起<input type="date" name="from" value="{{ from_date or '' }}" class="block rounded border border-slate-300 px-2 py-1 text-sm"></label>
+  <label class="block text-xs text-slate-500">迄<input type="date" name="to" value="{{ to_date or '' }}" class="block rounded border border-slate-300 px-2 py-1 text-sm"></label>
+  <button type="submit" class="rounded bg-slate-900 px-3 py-1.5 text-sm text-white">套用</button>
+</form>
+
+<div id="tx-rows" class="rounded-lg bg-white p-4 shadow">
+  {% with txns=txns, slug=user.slug, base_currency=user.base_currency %}
+    {% include "components/transactions_table.html" %}
+  {% endwith %}
+</div>
+
+<p class="mt-4 text-xs text-slate-400">顯示最近 {{ txns | length }} 筆（最多 500）。</p>
+
+{% endblock %}
