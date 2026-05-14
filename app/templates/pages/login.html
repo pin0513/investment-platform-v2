@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}登入{% endblock %}
+{% block content %}
+<div class="mx-auto mt-12 max-w-md rounded-lg bg-white p-8 shadow">
+  <h1 class="text-center text-2xl font-semibold text-slate-900">登入</h1>
+  <p class="mt-2 text-center text-sm text-slate-500">使用您的 Google 帳號繼續</p>
+
+  <div id="g_id_onload"
+       data-client_id="{{ google_client_id }}"
+       data-context="signin"
+       data-callback="handleCredentialResponse"
+       data-auto_select="false"
+       data-itp_support="true">
+  </div>
+  <div class="mt-6 flex justify-center">
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="signin_with"
+         data-shape="rectangular"
+         data-locale="zh_TW">
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <p class="mt-8 text-center text-xs text-slate-400">
+    Investment Platform v{{ app_version }}
+  </p>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+async function handleCredentialResponse(response) {
+  const next = new URLSearchParams(window.location.search).get('next') || '/';
+  try {
+    const r = await fetch('/auth/google', {
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      body: JSON.stringify({ id_token: response.credential }),
+      credentials: 'include',
+    });
+    if (r.ok) {
+      window.location.href = next;
+    } else {
+      const err = await r.json().catch(() => ({ error: { message: 'Login failed' } }));
+      document.body.innerHTML += `<div style="color:red;padding:1em">${err.error?.message || 'Login failed'}</div>`;
+    }
+  } catch (e) {
+    document.body.innerHTML += `<div style="color:red;padding:1em">${e}</div>`;
+  }
+}
+</script>
+{% endblock %}
