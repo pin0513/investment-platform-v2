@@ -198,7 +198,7 @@ def test_dashboard_weekly_widget_shows_report(client, auth_user):
 
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
-    assert "最新週報" in r.text
+    assert "近期週報" in r.text
     assert "2026-05-05" in r.text
 
 
