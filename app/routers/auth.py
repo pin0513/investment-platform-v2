@@ -6,7 +6,9 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
+from starlette.responses import HTMLResponse
 
+from app.config import get_settings
 from app.db import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
@@ -26,8 +28,23 @@ from app.services.auth import (
     InvalidCredentialsError,
     InvalidRefreshTokenError,
 )
+from app.templating import get_templates
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.get("/login", response_class=HTMLResponse, include_in_schema=False)
+def login_page(request: Request, error: str | None = None):
+    settings = get_settings()
+    return get_templates().TemplateResponse(
+        "pages/login.html",
+        {
+            "request": request,
+            "user": None,
+            "error": error,
+            "google_client_id": settings.google_oauth_client_id,
+        },
+    )
 
 
 def _client_ip(request: Request) -> Optional[str]:

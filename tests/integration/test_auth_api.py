@@ -78,3 +78,13 @@ def test_logout_revokes(client, user_with_pw):
     # Reuse should now fail
     r = client.post("/auth/refresh", json={"refresh_token": refresh})
     assert r.status_code == 401
+
+
+def test_login_page_renders_html(client):
+    r = client.get("/auth/login")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")
+    body = r.text
+    assert "登入" in body
+    assert "g_id_onload" in body
+    assert "data-client_id" in body  # google oauth client id injected into template

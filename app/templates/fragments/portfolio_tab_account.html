@@ -1,0 +1,18 @@
+{# Sorted by account value desc; clickable into account drilldown #}
+<div class="space-y-4">
+  {% for group in summary.by_account %}
+  <div class="rounded-lg bg-white p-4 shadow">
+    <div class="mb-2 flex items-center justify-between">
+      <h3 class="font-medium text-slate-900">{{ group.label }}</h3>
+      <span class="num text-sm text-slate-600">{{ group.value | currency_fmt(summary.base_currency) }} ({{ group.pct }}%)</span>
+    </div>
+    {% set account_holdings = [] %}
+    {% for h in summary.holdings if h.account_name == group.label %}
+      {% set _ = account_holdings.append(h) %}
+    {% endfor %}
+    {% with holdings=account_holdings, base_currency=summary.base_currency, slug=user.slug, show_account=False %}
+      {% include "components/holdings_table.html" %}
+    {% endwith %}
+  </div>
+  {% endfor %}
+</div>

@@ -1,8 +1,10 @@
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app import errors
@@ -37,6 +39,10 @@ from app.routers import (
 from app.routers import (
     transactions as transactions_router,
 )
+from app.routers.reader import dashboard as reader_dashboard
+from app.routers.reader import instruments_view as reader_instruments
+from app.routers.reader import portfolio as reader_portfolio
+from app.routers.reader import root as reader_root
 
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
@@ -86,6 +92,10 @@ def create_app() -> FastAPI:
 
     errors.install(app)
 
+    app.mount(
+        "/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static"
+    )
+
     app.include_router(health.router)
     app.include_router(auth_router.router)
     app.include_router(accounts_router.router)
@@ -96,6 +106,10 @@ def create_app() -> FastAPI:
     app.include_router(quotes_router.router)
     app.include_router(exchange_rates_router.router)
     app.include_router(portfolio_router.router)
+    app.include_router(reader_root.router)
+    app.include_router(reader_dashboard.router)
+    app.include_router(reader_portfolio.router)
+    app.include_router(reader_instruments.router)
 
     # Mount the MCP sub-app at /mcp — must come after all include_router() calls.
     # Endpoint inside the sub-app is "/" → full path is POST /mcp/.

@@ -1,0 +1,15 @@
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {% for group in summary.by_asset_class %}
+  <div class="rounded-lg bg-white p-3 shadow">
+    <p class="text-xs uppercase tracking-wide text-slate-500">{{ group.label }}</p>
+    <p class="num mt-1 text-lg font-semibold text-slate-900">{{ group.value | currency_fmt(summary.base_currency) }}</p>
+    <p class="text-xs text-slate-500">{{ group.pct }}% · {{ group.count }} 個</p>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="mt-6 rounded-lg bg-white p-4 shadow">
+  {% with holdings=summary.holdings, base_currency=summary.base_currency, slug=user.slug %}
+    {% include "components/holdings_table.html" %}
+  {% endwith %}
+</div>

@@ -1,0 +1,16 @@
+/* Custom styles on top of Tailwind CDN */
+
+/* Number cells right-align with monospaced digits */
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Positive / negative P&L */
+.pos { color: rgb(34 197 94); }   /* green-500 */
+.neg { color: rgb(239 68 68); }    /* red-500 */
+
+/* HTMX swap fade-in */
+.htmx-swapping { opacity: 0; transition: opacity 200ms; }
+.htmx-settling { opacity: 1; transition: opacity 200ms; }
