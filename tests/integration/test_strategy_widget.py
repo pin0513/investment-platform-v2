@@ -55,8 +55,8 @@ def _create_strategy(client, headers, **kwargs):
         "report_type": "STRATEGY_MONTHLY",
         "period_start": _PERIOD_START.isoformat(),
         "period_end": _PERIOD_END.isoformat(),
-        "summary_md": "TW 半導體週期上行，金融受利差收斂壓力。建議加碼 2330。",
-        "content_md": "## 整體判斷\n半導體上行。\n\n## Actions\n- ADD 2330",
+        "summary_md": "TW 半導體週期上行. 金融受利差收斂壓力. 建議加碼 2330.",
+        "content_md": "## 整體判斷\n半導體上行.\n\n## Actions\n- ADD 2330",
         "status": "FINAL",
         "metrics": {
             "score": {"overall": 78},
@@ -198,11 +198,12 @@ def test_dashboard_strategy_widget_shows_tuning_badge(client, auth_user):
     new_metrics["tuning_round"] = 3
     new_metrics["prev_overall_score"] = 78
     new_metrics["score"] = {"overall": 81}
-    client.patch(
+    r = client.patch(
         f"/api/v1/reports/{created['id']}",
         json={"metrics": new_metrics},
         headers=headers,
     )
+    assert r.status_code == 200, r.text
 
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
