@@ -63,6 +63,23 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class CacheControlMiddleware(BaseHTTPMiddleware):
+    """Force `no-store` on dynamic responses.
+
+    Without this the browser heuristically caches authenticated HTML and the
+    `/` redirect (responses come back as `cache-control: private` with no
+    freshness directive). After login the user then sees a stale pre-auth
+    state until a hard refresh. Static assets under /static/ keep their own
+    caching so versioned JS/CSS still load from cache.
+    """
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if not request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
 
@@ -98,6 +115,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(CacheControlMiddleware)
 
     errors.install(app)
 
