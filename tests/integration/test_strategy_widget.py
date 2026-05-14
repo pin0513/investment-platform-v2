@@ -219,5 +219,5 @@ def test_dashboard_strategy_widget_link_to_detail(client, auth_user):
 
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
-    assert f'/{slug}/reports/{created["id"]}' in r.text
+    assert f"/{slug}/reports/{created['id']}" in r.text
     assert "看完整" in r.text
