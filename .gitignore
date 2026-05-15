@@ -18,3 +18,7 @@ build/
 .idea/
 .vscode/
 imports/
+
+# 永豐 SinoPac API — certificate + keys, NEVER commit
+sino-apis/
+*.pfx

@@ -24,5 +24,7 @@ P1 adds: `transactions`, `holdings`, `price_history`, `quotes`, `exchange_rates`
 | `holdings` | Materialized view; rebuilt by `HoldingService.recompute()`. Partial unique index on `(account_id, instrument_id)` where `deleted_at IS NULL`. |
 | `quotes` | Last-known price per instrument (one row each). P1 = manual upsert; P3 cron will auto-fill. |
 | `exchange_rates` | (base, quote, date) → rate. P1 = manual upsert; P3 cron will auto-fill. Lookup supports latest-at-or-before date and inverse derivation. |
+| `portfolio_snapshots` | Point-in-time portfolio valuation for allocation timeline analysis. Stores source, status, latest data time, base currency, and total value. |
+| `holding_snapshots` | Denormalized per-holding values inside a portfolio snapshot. Stores account/instrument labels at capture time so historical charts remain stable. |
 
-P2 will add: news_items, instrument_tags, instrument_metadata_history, reports, snapshots.
+P2 will add: news_items, instrument_tags, instrument_metadata_history, reports.

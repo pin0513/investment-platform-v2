@@ -34,6 +34,9 @@ from app.routers import (
     instruments as instruments_router,
 )
 from app.routers import (
+    market as market_router,
+)
+from app.routers import (
     portfolio as portfolio_router,
 )
 from app.routers import (
@@ -132,6 +135,7 @@ def create_app() -> FastAPI:
     app.include_router(holdings_router.router)
     app.include_router(quotes_router.router)
     app.include_router(exchange_rates_router.router)
+    app.include_router(market_router.router)
     app.include_router(portfolio_router.router)
     app.include_router(analyses_router.router)
     app.include_router(reports_router.router)

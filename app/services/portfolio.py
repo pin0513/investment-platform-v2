@@ -42,6 +42,9 @@ class PortfolioService:
                 base_currency=base_ccy,
                 total_value=Decimal("0"),
                 as_of=now,
+                data_source="DB_SNAPSHOT",
+                data_as_of=None,
+                data_notice="使用 DB 最新快照資料; 目前沒有持倉快照。",
                 by_asset_class=[],
                 by_account=[],
                 by_industry=[],
@@ -62,6 +65,13 @@ class PortfolioService:
             for a in self.s.execute(select(Account).where(Account.id.in_(account_ids))).scalars()
         }
         quotes_map = {q.instrument_id: q for q in self.quotes.list_by_instruments(instrument_ids)}
+        quote_times = [q.as_of for q in quotes_map.values() if q.as_of is not None]
+        holding_times = [h.updated_at for h in holdings if h.updated_at is not None]
+        data_as_of = max(quote_times or holding_times, default=None)
+        data_notice = (
+            "使用 DB 最新快照資料. 若永豐 API 回 406, 通常代表非營業時間或券商端暫不可查, "
+            "此畫面以最新快照時間為準."
+        )
 
         valuations: list[HoldingValuation] = []
         for h in holdings:
@@ -150,6 +160,9 @@ class PortfolioService:
             base_currency=base_ccy,
             total_value=total,
             as_of=now,
+            data_source="DB_SNAPSHOT",
+            data_as_of=data_as_of,
+            data_notice=data_notice,
             by_asset_class=by_class,
             by_account=by_account,
             by_industry=by_industry,

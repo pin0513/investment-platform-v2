@@ -25,10 +25,13 @@ _SYMBOLS = {
 }
 
 
-def currency_fmt(value: Decimal | float | None, currency: str, ndigits: int = 2) -> str:
+def currency_fmt(value: Decimal | float | None, currency: str, ndigits: int | None = None) -> str:
     if value is None:
         return "—"
-    sym = _SYMBOLS.get(currency.upper(), currency.upper() + " ")
+    currency = currency.upper()
+    if ndigits is None:
+        ndigits = 0 if currency in {"TWD", "JPY"} else 2
+    sym = _SYMBOLS.get(currency, currency + " ")
     d = Decimal(value) if not isinstance(value, Decimal) else value
     rounded = d.quantize(Decimal("1") if ndigits == 0 else Decimal(f"1e-{ndigits}"))
     # Format with thousands separators

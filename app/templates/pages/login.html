@@ -23,6 +23,18 @@
     </div>
   </div>
 
+  <div class="mt-6 border-t border-slate-100 pt-6">
+    <form method="post" action="/auth/demo{% if request.query_params.get('next') %}?next={{ request.query_params.get('next') | urlencode }}{% endif %}">
+      <button type="submit"
+              class="w-full rounded-md border border-slate-300 bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">
+        Demo 帳戶
+      </button>
+    </form>
+    <p class="mt-2 text-center text-xs text-slate-500">
+      使用模擬投資組合進入；金額約為來源帳戶的 1/100。
+    </p>
+  </div>
+
   {% if error %}
   <div class="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
     {{ error }}

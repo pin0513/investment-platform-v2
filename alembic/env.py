@@ -15,6 +15,7 @@ from app.models import (  # noqa: F401
     holding,  # new
     industry,
     instrument,
+    portfolio_snapshot,
     quote,  # new
     refresh_token,
     report,  # new P2.6

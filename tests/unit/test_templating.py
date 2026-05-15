@@ -4,7 +4,11 @@ from app.templating import currency_fmt, pct_fmt
 
 
 def test_currency_fmt_twd():
-    assert currency_fmt(Decimal("1234567.89"), "TWD") == "NT$ 1,234,567.89"
+    assert currency_fmt(Decimal("1234567.89"), "TWD") == "NT$ 1,234,568"
+
+
+def test_currency_fmt_twd_explicit_decimals():
+    assert currency_fmt(Decimal("1234567.89"), "TWD", ndigits=2) == "NT$ 1,234,567.89"
 
 
 def test_currency_fmt_usd():

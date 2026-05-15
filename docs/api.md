@@ -80,6 +80,18 @@ Auth: `Authorization: Bearer <jwt>` or `__session` cookie
 | GET | `/api/v1/portfolio/by-class?ccy=` | just the asset-class breakdown |
 | GET | `/api/v1/portfolio/by-account?ccy=` | just the account breakdown |
 | GET | `/api/v1/portfolio/by-industry?ccy=` | just the industry breakdown |
+| GET | `/api/v1/portfolio/snapshots?from=&to=&limit=` | list saved portfolio snapshots, newest first |
+| GET | `/api/v1/portfolio/snapshots/latest` | latest saved snapshot with denormalized holdings |
+| GET | `/api/v1/portfolio/snapshots/{id}` | one saved snapshot with denormalized holdings |
+| GET | `/api/v1/portfolio/snapshots/allocation?group_by=` | allocation timeline grouped by asset_class, account, currency, or industry |
+| POST | `/api/v1/portfolio/snapshots?ccy=` | save a snapshot from current DB holdings/quotes/fx |
+| POST | `/api/v1/portfolio/snapshots/import` | save a snapshot supplied by an external API sync job |
+
+`/portfolio/snapshots/import` is intended for broker sync jobs. It does not mutate the
+immutable transaction ledger or the current `holdings` materialized view. If broker
+API access fails, for example SinoPac returns `406` outside business hours, callers
+should read `/portfolio/snapshots/latest` and present its `as_of/source_message` as
+the latest available snapshot.
 
 ### MCP
 

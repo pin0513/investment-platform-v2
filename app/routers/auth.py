@@ -4,9 +4,9 @@ import ipaddress
 import uuid
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, RedirectResponse
 
 from app.config import get_settings
 from app.db import get_db
@@ -28,6 +28,7 @@ from app.services.auth import (
     InvalidCredentialsError,
     InvalidRefreshTokenError,
 )
+from app.services.demo import DemoSourceNotFoundError, DemoUserService
 from app.templating import get_templates
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -150,6 +151,39 @@ def login_google(
         refresh_token=pair.refresh_token,
         expires_in=pair.expires_in,
     )
+
+
+@router.post("/demo", response_class=RedirectResponse, include_in_schema=False)
+def login_demo(
+    request: Request,
+    db: Annotated[Session, Depends(get_db)],
+    next: Annotated[str | None, Query()] = None,
+):
+    settings = get_settings()
+    try:
+        demo_user = DemoUserService(db).reset_from_source_email(settings.first_admin_email)
+    except DemoSourceNotFoundError as e:
+        raise HTTPException(status_code=503, detail=f"Demo source user not found: {e}") from e
+
+    pair = AuthService(db).login_google(
+        user=demo_user,
+        user_agent=request.headers.get("user-agent"),
+        ip=_client_ip(request),
+    )
+    db.commit()
+
+    demo_root = f"/{demo_user.slug}/"
+    target = next if next == "/" or (next and next.startswith(demo_root)) else demo_root
+    redirect = RedirectResponse(url=target, status_code=303)
+    redirect.set_cookie(
+        key="__session",
+        value=pair.access_token,
+        max_age=pair.expires_in,
+        httponly=True,
+        secure=settings.environment == "prod",
+        samesite="lax",
+    )
+    return redirect
 
 
 @router.post("/refresh", response_model=TokenResponse)
