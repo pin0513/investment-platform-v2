@@ -150,26 +150,28 @@ def test_unknown_strategy_type_rejected(client, auth_user):
 
 
 def test_dashboard_strategy_widget_empty_state(client, auth_user):
+    """Unified 近期報告 widget — empty state."""
     user_id, slug = auth_user
     r = client.get(f"/{slug}/", headers=_h(user_id))
     assert r.status_code == 200
-    assert "月度戰略" in r.text
-    assert "尚無戰略報告" in r.text
+    assert "近期報告" in r.text
+    assert "尚無報告" in r.text
 
 
 def test_dashboard_strategy_widget_renders_score(client, auth_user):
+    """STRATEGY_MONTHLY entries show score inline as N/100 (no space)."""
     user_id, slug = auth_user
     headers = _h(user_id)
     _create_strategy(client, headers)
 
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
-    assert "月度戰略" in r.text
-    assert "78" in r.text  # score
-    assert "/ 100" in r.text
+    assert "月度戰略" in r.text  # type label
+    assert "78/100" in r.text  # score badge (concatenated, no space)
 
 
 def test_dashboard_strategy_widget_renders_actions(client, auth_user):
+    """STRATEGY_MONTHLY entries show action chips with direction + symbol."""
     user_id, slug = auth_user
     headers = _h(user_id)
     _create_strategy(client, headers)
@@ -180,15 +182,16 @@ def test_dashboard_strategy_widget_renders_actions(client, auth_user):
     assert "2330" in r.text
     assert "2887" in r.text
     assert "VOO" in r.text
-    # action direction labels (emoji + text)
+    # action direction labels in chips
     assert "ADD" in r.text
     assert "TRIM" in r.text
     assert "HOLD" in r.text
-    # rationale_short text
-    assert "半導體 AI 動能延續" in r.text
+    # The unified widget shows summary_md (line-clamp-3) which begins with the strategy text.
+    # rationale_short itself is NOT rendered on dashboard (only on detail page).
 
 
 def test_dashboard_strategy_widget_shows_tuning_badge(client, auth_user):
+    """tuning_round > 1 renders as `tuning #N` + delta vs prev_overall_score."""
     user_id, slug = auth_user
     headers = _h(user_id)
     created = _create_strategy(client, headers)
@@ -208,11 +211,12 @@ def test_dashboard_strategy_widget_shows_tuning_badge(client, auth_user):
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
     assert "tuning #3" in r.text
-    # delta indicator (81 - 78 = +3)
+    # delta indicator (81 - 78 = +3) shown as ↑+3
     assert "+3" in r.text
 
 
 def test_dashboard_strategy_widget_link_to_detail(client, auth_user):
+    """Each report item links to its detail page."""
     user_id, slug = auth_user
     headers = _h(user_id)
     created = _create_strategy(client, headers)
@@ -220,7 +224,8 @@ def test_dashboard_strategy_widget_link_to_detail(client, auth_user):
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
     assert f"/{slug}/reports/{created['id']}" in r.text
-    assert "看完整" in r.text
+    # Header link to full list — wording is now "看全部" (was "看完整")
+    assert "看全部" in r.text
 
 
 # ------------------------------------------------------------------

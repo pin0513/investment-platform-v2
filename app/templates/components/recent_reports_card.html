@@ -1,0 +1,130 @@
+{# Unified 報告 widget — 月度戰略 / 週報 / 日報 / 月報 / 長期 全部整合
+   Context expects: `recent_reports` (list of Report, already sorted by generated_at desc) + `user`. #}
+<div class="mt-8 rounded-lg bg-white p-4 shadow">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="text-base font-semibold text-slate-900">📋 近期報告</h2>
+    <a href="/{{ user.slug }}/reports" class="text-xs text-blue-600 hover:underline">看全部 →</a>
+  </div>
+
+  {% if recent_reports %}
+    <ul class="space-y-2">
+      {% for r in recent_reports %}
+        {% set is_strategy = r.report_type == "STRATEGY_MONTHLY" %}
+        {% set m = r.metrics or {} %}
+        {% set score = (m.get("score") or {}).get("overall") %}
+        {% set prev_score = m.get("prev_overall_score") %}
+        {% set tuning = m.get("tuning_round") %}
+        {% set actions = m.get("actions", []) %}
+
+        {# 類型對應 (label, emoji, chip class) #}
+        {% if r.report_type == "STRATEGY_MONTHLY" %}
+          {% set label = "月度戰略" %}{% set emoji = "📊" %}
+          {% set chip_class = "bg-indigo-600 text-white" %}
+        {% elif r.report_type == "DAILY" %}
+          {% set label = "日報" %}{% set emoji = "📅" %}
+          {% set chip_class = "bg-emerald-100 text-emerald-700" %}
+        {% elif r.report_type == "WEEKLY" %}
+          {% set label = "週報" %}{% set emoji = "📈" %}
+          {% set chip_class = "bg-blue-100 text-blue-700" %}
+        {% elif r.report_type == "MONTHLY" %}
+          {% set label = "月報" %}{% set emoji = "📋" %}
+          {% set chip_class = "bg-amber-100 text-amber-700" %}
+        {% elif r.report_type == "LONG_TERM" %}
+          {% set label = "長期回顧" %}{% set emoji = "🔭" %}
+          {% set chip_class = "bg-slate-200 text-slate-700" %}
+        {% else %}
+          {% set label = r.report_type %}{% set emoji = "📄" %}
+          {% set chip_class = "bg-slate-100 text-slate-700" %}
+        {% endif %}
+
+        <li>
+          <a href="/{{ user.slug }}/reports/{{ r.id }}"
+             class="block rounded-lg border p-3 transition-colors
+               {% if is_strategy %}
+                 border-indigo-300 bg-gradient-to-br from-indigo-50 via-white to-white
+                 ring-1 ring-indigo-100 hover:from-indigo-100
+               {% else %}
+                 border-slate-200 hover:bg-slate-50
+               {% endif %}">
+
+            {# 頂列：類型 chip + score + period + 時間 + status #}
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex min-w-0 items-center gap-2">
+                <span class="shrink-0 rounded px-2 py-0.5 text-xs font-medium {{ chip_class }}">
+                  {{ emoji }} {{ label }}
+                </span>
+
+                {% if is_strategy and score is not none %}
+                  <span class="shrink-0 rounded border border-indigo-200 bg-white px-2 py-0.5 text-xs font-bold text-indigo-700">
+                    {{ score }}/100
+                    {% if prev_score is not none and prev_score != score %}
+                      {% set delta = score - prev_score %}
+                      <span class="ml-0.5 text-[10px] {% if delta > 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                        {% if delta > 0 %}↑+{{ delta }}{% else %}↓{{ delta }}{% endif %}
+                      </span>
+                    {% endif %}
+                  </span>
+                {% endif %}
+
+                {% if tuning and tuning > 1 %}
+                  <span class="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600">
+                    tuning #{{ tuning }}
+                  </span>
+                {% endif %}
+
+                <span class="truncate text-sm font-medium {% if is_strategy %}text-indigo-900{% else %}text-slate-900{% endif %}">
+                  {{ r.period_start.strftime("%Y-%m-%d") }} – {{ r.period_end.strftime("%Y-%m-%d") }}
+                </span>
+              </div>
+
+              <div class="flex shrink-0 items-center gap-1 text-xs text-slate-500">
+                {% if r.generated_at %}
+                  <span title="產出時間">{{ r.generated_at.strftime("%m/%d %H:%M") }}</span>
+                {% endif %}
+                <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">{{ r.status }}</span>
+              </div>
+            </div>
+
+            {# 摘要：戰略 3 行、其他 2 行 #}
+            {% if r.summary_md %}
+              <p class="mt-2 text-xs leading-relaxed text-slate-600
+                        {% if is_strategy %}line-clamp-3{% else %}line-clamp-2{% endif %}">
+                {{ r.summary_md }}
+              </p>
+            {% endif %}
+
+            {# 戰略獨有：action chips inline #}
+            {% if is_strategy and actions %}
+              <div class="mt-2 flex flex-wrap gap-1">
+                {% for a in actions[:5] %}
+                  <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium
+                    {% if a.direction == 'ADD' %}bg-emerald-100 text-emerald-700
+                    {% elif a.direction == 'TRIM' or a.direction == 'EXIT' %}bg-red-100 text-red-700
+                    {% elif a.direction == 'REBALANCE' %}bg-amber-100 text-amber-700
+                    {% else %}bg-slate-100 text-slate-700{% endif %}">
+                    {% if a.direction == 'ADD' %}⬆
+                    {% elif a.direction == 'TRIM' %}⬇
+                    {% elif a.direction == 'EXIT' %}✕
+                    {% elif a.direction == 'HOLD' %}⏸
+                    {% elif a.direction == 'REBALANCE' %}🔄
+                    {% endif %}
+                    {{ a.direction }} {{ a.symbol }}
+                  </span>
+                {% endfor %}
+                {% if actions | length > 5 %}
+                  <span class="text-[11px] text-slate-500">+{{ actions | length - 5 }} 條</span>
+                {% endif %}
+              </div>
+            {% endif %}
+
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-sm text-slate-400">
+      尚無報告。透過 <code class="rounded bg-slate-100 px-1">invest-finance-report</code> skill 跑日/週/月報，
+      或 <code class="rounded bg-slate-100 px-1">STRATEGY_MONTHLY</code> 戰略月報。
+    </p>
+  {% endif %}
+</div>

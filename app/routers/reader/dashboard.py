@@ -50,10 +50,16 @@ def dashboard(
         if items:
             analyses_by_symbol[h.symbol] = items
 
-    # Fetch recent reports for dashboard widget (up to 5, any type)
+    # Fetch recent reports for unified widget. Service orders by period_start
+    # desc, but we want generated_at desc (newer creation time on top), so pull
+    # a wider buffer and resort in Python.
     report_svc = ReportService(db, audit)
-    recent_reports, _ = report_svc.list(user.id, limit=5)
-    latest_strategy = report_svc.latest(user.id, "STRATEGY_MONTHLY")
+    buffered, _ = report_svc.list(user.id, limit=20)
+    recent_reports = sorted(
+        buffered,
+        key=lambda r: (r.generated_at or r.uploaded_at or r.created_at),
+        reverse=True,
+    )[:5]
 
     return get_templates().TemplateResponse(
         "pages/dashboard.html",
@@ -64,6 +70,5 @@ def dashboard(
             "top_holdings": top,
             "analyses_by_symbol": analyses_by_symbol,
             "recent_reports": recent_reports,
-            "latest_strategy": latest_strategy,
         },
     )

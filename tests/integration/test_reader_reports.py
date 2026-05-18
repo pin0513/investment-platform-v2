@@ -188,7 +188,8 @@ def test_dashboard_weekly_widget_empty_state(client, auth_user):
     user_id, slug = auth_user
     r = client.get(f"/{slug}/", headers=_h(user_id))
     assert r.status_code == 200
-    assert "尚無週報" in r.text
+    # unified widget empty state — wording changed from 「尚無週報」 to 「尚無報告」
+    assert "尚無報告" in r.text
 
 
 def test_dashboard_weekly_widget_shows_report(client, auth_user):
@@ -198,7 +199,9 @@ def test_dashboard_weekly_widget_shows_report(client, auth_user):
 
     r = client.get(f"/{slug}/", headers=headers)
     assert r.status_code == 200
-    assert "近期週報" in r.text
+    # widget heading renamed to 近期報告 (unified for daily/weekly/monthly/strategy)
+    assert "近期報告" in r.text
+    assert "週報" in r.text  # WEEKLY type label appears
     assert "2026-05-05" in r.text
 
 

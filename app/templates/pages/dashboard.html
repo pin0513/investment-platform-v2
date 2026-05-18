@@ -2,8 +2,6 @@
 {% block title %}{{ user.slug }} - 總覽{% endblock %}
 {% block content %}
 
-{% include "components/strategy_card.html" %}
-
 <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
   <div>
     <div class="flex items-center gap-2">
@@ -73,40 +71,7 @@
   {% endwith %}
 </div>
 
-<div class="mt-8 rounded-lg bg-white p-4 shadow">
-  <div class="mb-3 flex items-center justify-between">
-    <h2 class="text-base font-semibold text-slate-900">📝 近期週報</h2>
-    <a href="/{{ user.slug }}/reports" class="text-xs text-blue-600 hover:underline">看全部 →</a>
-  </div>
-  {% if recent_reports %}
-    <ul class="divide-y divide-slate-100">
-      {% for r in recent_reports %}
-      <li class="py-2">
-        <a href="/{{ user.slug }}/reports/{{ r.id }}" class="block hover:bg-slate-50 -mx-2 px-2 rounded">
-          <div class="flex items-center justify-between text-sm">
-            <span class="font-medium text-slate-900">
-              {{ r.period_start.strftime("%Y-%m-%d") }} – {{ r.period_end.strftime("%Y-%m-%d") }}
-            </span>
-            <span class="text-xs text-slate-500">
-              <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">{{ r.report_type }}</span>
-              <span class="ml-1 rounded bg-slate-100 px-1.5 py-0.5">{{ r.status }}</span>
-            </span>
-          </div>
-          {% if r.summary_md %}
-          <p class="mt-1 text-xs text-slate-600 line-clamp-2">{{ r.summary_md }}</p>
-          {% endif %}
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-sm text-slate-400">
-      尚無週報。可在
-      <a href="/{{ user.slug }}/reports" class="text-blue-600 hover:underline">週報列表</a>
-      手動上傳，或透過 <code class="bg-slate-100 px-1 rounded">POST /api/v1/reports</code>。
-    </p>
-  {% endif %}
-</div>
+{% include "components/recent_reports_card.html" %}
 
 <div class="mt-8 rounded-lg bg-white p-4 shadow">
   <div class="mb-3 flex items-center justify-between">
