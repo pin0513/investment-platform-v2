@@ -4,20 +4,24 @@ description: |
   專業級投資組合期間報告 — 整合多資料源（永豐 Shioaji 帳務+技術、TWSE 籌碼面、
   yfinance 美股、財經新聞、政治地緣事件），產出嚴謹、可重現、來源可驗證的
   金融分析報告，寫入 investment-platform-v2 (https://invest.paulfun.net) reports 表。
-  三種 cadence：week (-7d) / monthly (-30d) / overview (1y / Ny)。
+  四種 cadence：daily (intraday/盤後快照) / week (-7d) / monthly (-30d) / overview (1y / Ny)。
   每份報告同時涵蓋：投組現況、市場與板塊、個股動態、籌碼/技術/基本面、政治地緣與
   財報事件、下一動作建議。所有主要判斷強制行內引用來源。
+  **每個外部數字必須附 snapshot timestamp** (內部 timestamp + 內容時間)，
+  metrics.snapshot_timestamps 結構化欄位記錄各資料源抓取時間。
   Upsert 規則：以「報告產生當天的 calendar date」+ report_type 為 key —
-  同日重跑 PATCH 覆寫並 tuning_round++；隔日新一筆。
-  觸發詞：「跑週報」「寫月報」「年度回顧」「invest-finance-report week/monthly/overview」
-  「市場分析」「金融分析報告」「rebalance 建議」「下一動作」「該怎麼動」.
+  同日重跑 PATCH 覆寫並 tuning_round++（盤中可多輪 tune）；隔日新一筆。
+  觸發詞：「跑日報」「跑週報」「寫月報」「年度回顧」「tune 報告」
+  「invest-finance-report daily/week/monthly/overview」「市場分析」「下一動作」「該怎麼動」.
   本 skill 取代舊的 investment-period-report (2026-05-15)；reports 表 type 沿用
-  WEEKLY/MONTHLY/LONG_TERM (新報告也支援 STRATEGY_MONTHLY 形式的 prescriptive 內容
-  作為每份報告的「下一動作」章節)。
-version: 1.0
-last-updated: 2026-05-15
+  WEEKLY/MONTHLY/LONG_TERM/CUSTOM/STRATEGY_MONTHLY，**新增 DAILY**（v1.1, 2026-05-18）。
+version: 1.1
+last-updated: 2026-05-18
 scope: repo-level (investment-platform-v2)
 replaces: investment-period-report (user-level)
+changelog:
+  - "v1.1 (2026-05-18): 加 DAILY cadence + snapshot_timestamps 結構化欄位 + 強制每個外部數字標 timestamp"
+  - "v1.0 (2026-05-15): 初版 — week/monthly/overview，取代 investment-period-report"
 ---
 
 # invest-finance-report — 專業級期間報告
@@ -35,29 +39,36 @@ replaces: investment-period-report (user-level)
 - 想跑量化模型 → `investment-modeling` skill
 - 純戰略檢視 (不需嚴格資料源) → 直接寫 markdown，別用這支 skill
 
-## 三種 cadence
+## 四種 cadence
 
 | Type | 預設期間 | report_type 欄位 | 重點 |
 |---|---|---|---|
+| **daily** | 當日盤中 / 盤後快照 | `DAILY` | 今日盤中即時狀態、單日漲跌歸因、明日觀察點；輕量、可同日多次 tune |
 | **week** | end_date − 7d (≈ 5 交易日) | `WEEKLY` | 本週走勢、新聞驅動因子、籌碼變化、下週觀察 |
 | **monthly** | end_date − 30d | `MONTHLY` | 月度績效歸因、產業輪動、配置調整建議、下月戰略 |
 | **overview** | end_date − N×365d (預設 1y，可指定) | `LONG_TERM` | 長期績效、配置演化、thesis 驗證、下一階段方向 |
+
+**DAILY 的使用情境**：
+- 盤中跟進（用戶說「現在風向如何」「跑一份盤中快照」）
+- 盤後當日結算（16:30 後 T86 出來，當日完整紀錄）
+- 同一天可多次 tune（早盤 / 午盤 / 收盤後）；隔日新一筆
 
 > 若用戶只要「下一動作建議」不要長篇分析 → 用舊的 STRATEGY_MONTHLY 形式（仍可寫入 `STRATEGY_MONTHLY` type）。本 skill 預設輸出**描述+prescriptive 合併**的完整報告。
 
 ## 強制資料源（依 cadence）
 
-| Source | 工具 | week | monthly | overview |
-|---|---|---|---|---|
-| 平台 portfolio summary | `GET /api/v1/portfolio/summary` | ✓ | ✓ | ✓ |
-| 平台 transactions | `GET /api/v1/transactions?from=&to=` | ✓ | ✓ | ✓ |
-| 永豐 持倉/餘額 | `sino-stocks query.py positions/balance` | ✓ | ✓ | ✓ |
-| 永豐 K 線 | `sino-stocks query.py kbars SYM --days N` | ✓ top 5 持倉 daily | ✓ weekly aggregated | ✓ monthly |
-| 永豐 即時報價 | `sino-stocks query.py quote ...` | ✓ 報告當下 | △ | ✗ |
-| TWSE 三大法人 (籌碼) | `helpers/twse_chip_flow.py inst-summary` | ✓ 本週每日 | ✓ 月度趨勢 | ✗ |
-| TWSE 融資融券 | `helpers/twse_chip_flow.py margin SYM` | △ 持倉熱門股 | △ | ✗ |
-| US 即時價/基本面 | `yfinance` (Python) | ✓ | ✓ | ✓ |
-| 個股新聞 (TW) | WebFetch cnyes / Yahoo TW finance | ✓ | △ 摘要月度 | ✗ |
+| Source | 工具 | daily | week | monthly | overview |
+|---|---|---|---|---|---|
+| 平台 portfolio summary | `GET /api/v1/portfolio/summary` | ✓ | ✓ | ✓ | ✓ |
+| 平台 transactions | `GET /api/v1/transactions?from=&to=` | ✓ 當日 | ✓ | ✓ | ✓ |
+| 永豐 持倉/餘額 | `sino-stocks query.py positions/balance` | ✓ | ✓ | ✓ | ✓ |
+| 永豐 即時報價 | `sino-stocks query.py quote ...` | ✓ **必含** | ✓ 報告當下 | △ | ✗ |
+| 永豐 K 線 | `sino-stocks query.py kbars SYM --days N` | △ | ✓ top 5 持倉 daily | ✓ weekly aggregated | ✓ monthly |
+| TWSE 三大法人 (籌碼) | `helpers/twse_chip_flow.py inst-summary` | ✓ 昨日 (今天盤前) | ✓ 本週每日 | ✓ 月度趨勢 | ✗ |
+| TWSE 融資融券 | `helpers/twse_chip_flow.py margin SYM` | △ | △ 持倉熱門股 | △ | ✗ |
+| 大盤即時 (^TWII) | WebFetch tw.stock.yahoo.com | ✓ **必含** | ✓ | △ | ✗ |
+| US 即時價/基本面 | `yfinance` (Python) | △ | ✓ | ✓ | ✓ |
+| 個股新聞 (TW) | WebFetch cnyes / Yahoo TW finance | △ 重大新聞 | ✓ | △ 摘要月度 | ✗ |
 | 個股新聞 (US) | WebFetch Yahoo Finance / MarketWatch / Reuters | ✓ | △ | ✗ |
 | 大盤 / 利率 / 匯率 | WebSearch + WebFetch | ✓ | ✓ | ✓ |
 | 政治 / 地緣 | WebSearch | ✓ 影響重大時 | ✓ 月度大事 | ✓ 年度結構性 |
@@ -154,6 +165,47 @@ replaces: investment-period-report (user-level)
 
 (去 monthly 細節，加) **長期 IRR / CAGR**、**配置演化**、**主要 thesis 表現驗證**、**3-5 條長期觀察**。
 
+### daily 範本 (v1.1 新增)
+
+```markdown
+# 日報 YYYY-MM-DD HH:MM (round N) — covers 當日盤中 / 盤後
+
+## 摘要 (3 句)
+今日加權 X (+/- Y%)，永豐 live NT$Z (vs 昨收 +/- A)。
+主要驅動: ... 重點觀察: ...
+
+## 今日盤中快照 (附 timestamp)
+| 標的 | 昨收 | 現價 | 漲跌% | 持倉變動估 |
+| ... | ... | ... (as of HH:MM 來源) |
+
+## 盤中市場
+- 加權指數 (as of HH:MM, 來源)
+- 強勢/弱勢類股
+- 量價結構觀察
+
+## 籌碼面 (若盤後 T86 已出)
+- 昨日三大法人 (5/17 已是上次更新, 5/18 要 16:30 後)
+
+## 政治/地緣 (若當日有新事件)
+
+## 對既有 actions 的盤中校準
+- (若早報已存在) 對照各 action 的 trigger 條件
+- 戰術微調: ...
+
+## 明日觀察
+- ...
+
+## Known data gap
+
+## 來源
+- ...
+```
+
+**Daily 用法**：
+- 盤前 (08:30-09:00)：抓盤前快照、外資隔夜變化
+- 盤中 (10:00 / 11:30 / 13:00)：tune round 2/3/4，反映場中發展
+- 盤後 (16:30 後)：tune 收盤版，含當日 T86 籌碼資料
+
 ## Metrics JSONB schema (寫入 reports 表)
 
 ```json
@@ -176,15 +228,53 @@ replaces: investment-period-report (user-level)
   "themes": ["半導體 cycle 上行", "Fed 鷹派續守"],
   "risk_flags": ["0050.TW 集中度 39.7%"],
   "data_sources": [
-    {"label": "TWSE T86 三大法人 2026-05-12", "url": "..."},
-    {"label": "Federal Reserve FOMC 04-29", "url": "..."}
+    {"label": "TWSE T86 三大法人 2026-05-12", "url": "...", "fetched_at": "2026-05-15T01:14:00Z", "content_date": "2026-05-12"},
+    {"label": "Federal Reserve FOMC 04-29", "url": "...", "fetched_at": "2026-05-15T01:20:00Z", "content_date": "2026-04-29"}
   ],
+  "snapshot_timestamps": {
+    "portfolio_summary":  {"as_of": "2026-05-18T00:29:49Z", "source": "GET /api/v1/portfolio/summary"},
+    "sinopac_live":       {"as_of": "2026-05-18T01:15:00Z", "source": "sino-stocks query.py positions"},
+    "sinopac_balance":    {"as_of": "2026-05-18T01:15:00Z", "source": "sino-stocks query.py balance"},
+    "intraday_quotes":    {"as_of": "2026-05-18T01:14:00Z", "source": "Yahoo TW ^TWII / sino-stocks quote"},
+    "twse_chip_flow":     {"as_of": "2026-05-15 (盤後 T86 16:30+)", "source": "TWSE T86"},
+    "news_window":        {"from": "2026-05-11", "to": "2026-05-18", "fetched_at": "2026-05-18T01:18:00Z"}
+  },
   "tuning_round": 1,
-  "prev_overall_score": 73
+  "prev_overall_score": 73,
+  "outlook_this_week": { "..." }
 }
 ```
 
-`data_sources` 是新增欄位 — 把所有引用的 URL 結構化記錄，dashboard 之後可以做「來源回查」。
+**新欄位（v1.1）**：
+
+- `data_sources[].fetched_at` — 抓取時間 (ISO 8601 UTC)
+- `data_sources[].content_date` — 內容本身的日期（新聞 = 發布日；T86 = 交易日；FOMC = 會議日）
+- `snapshot_timestamps` — 結構化記錄各資料源的快照時間，dashboard 之後可顯示「最後更新」chip
+
+`data_sources` 既有欄位 — 把所有引用的 URL 結構化記錄，dashboard 之後可以做「來源回查」。
+
+## 時間戳記規則（v1.1 強制）
+
+**每個外部數字必須附 timestamp**。寫成 `(as of YYYY-MM-DD HH:MM, 來源)` 格式接在數字後面。例：
+
+```
+✅ 加權 40,292.96 (-2.14%) (as of 2026-05-18 09:14, [Yahoo TW ^TWII](url))
+✅ 4 月 CPI 3.8% YoY (BLS 發布 2026-05-13, 引用 Yahoo Finance)
+✅ 永豐持倉市值 NT$4,541,341 (as of 2026-05-18 09:15 CST, 來源: sino-stocks query.py)
+✅ 外資對 0050 整週賣超 95M 股 (盤後 T86, 5/12-5/15)
+
+❌ 加權 40,292 (沒寫何時)
+❌ Fed 維持 3.5-3.75% (沒寫何時的決議)
+❌ 永豐持倉 NT$4.5M (沒寫快照時間)
+```
+
+**不需 timestamp**：
+- 顯然不變的常識（「股市週末不開盤」）
+- 純內部推論（「集中度 39.7% × 0050 漲 2% → 帳面變動估 +50k」— 這是計算結果）
+
+**內部資料 vs 外部資料 timestamp 差別**：
+- **內部**（你的持倉/交易）只要寫 `as of timestamp`（資料新鮮度）
+- **外部**（新聞/籌碼/市場）要寫 **內容時間** + **抓取時間**（避免「抓到舊新聞當新訊息」）
 
 ## Upsert (沿用)
 
@@ -237,6 +327,11 @@ curl -sf -X POST -H "Authorization: Bearer $TOKEN" -H 'content-type: application
 | 引用列空陣列 | data_sources 至少 3 條（即使是 weekly） |
 | 把 quote 的單筆數字當「漲勢」 | 漲勢要至少 5 個交易日 kbars 比對 |
 | US stocks 用 sino-stocks (不支援) | yfinance 抓美股、sino-stocks 抓台股 |
+| 寫數字不標 timestamp (v1.1) | 每個外部數字附 `(as of YYYY-MM-DD HH:MM, 來源)` |
+| metrics 沒寫 snapshot_timestamps (v1.1) | 必含結構化欄位記錄各資料源抓取時間 |
+| DAILY 跑很多次但都 POST 新 row | 同日 PATCH 既有，tuning_round++（盤前/盤中/盤後可多輪）|
+| DAILY 抓不到 T86 就跳過 | 至少寫「T86 要 16:30 後出」並標 known_data_gap |
+| 內部資料 (持倉/交易) 沒寫 as_of timestamp | 寫「截至 YYYY-MM-DD HH:MM 來源 API 名稱」|
 
 ## 與其他 skill 的關係
 
