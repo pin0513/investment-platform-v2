@@ -40,25 +40,67 @@ function initPrivacyMode() {
   const values = document.querySelectorAll('.privacy-value');
   if (!toggles.length || !values.length) return;
 
-  const apply = (isPrivate) => {
+  if (!document.documentElement.dataset.titleOriginal) {
+    document.documentElement.dataset.titleOriginal = document.title;
+  }
+
+  // 從顯示文字中解析出數字部分 (允許千分位逗號、負號、小數)
+  const parseAmount = (text) => {
+    if (!text) return null;
+    const match = String(text).replace(/[,\s]/g, '').match(/-?\d+(\.\d+)?/);
+    if (!match) return null;
+    const n = Number(match[0]);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  // 把新數字 reformat 回原本格式 (保留貨幣符號 / 正負號 / 周圍文字)
+  const reformat = (originalText, newAmount) => {
+    if (!originalText) return String(newAmount);
+    const match = String(originalText).match(/-?[\d,]+(\.\d+)?/);
+    if (!match) return String(newAmount);
+    const formatted = Math.round(newAmount).toLocaleString('en-US');
+    return originalText.replace(match[0], formatted);
+  };
+
+  // 每次點 關燈 都重新抽 [1, 100] 的整數 divisor
+  const pickDivisor = () => Math.floor(Math.random() * 100) + 1;
+
+  const apply = (isPrivate, divisor) => {
     document.documentElement.dataset.privacy = isPrivate ? 'on' : 'off';
     toggles.forEach((button) => {
-      button.textContent = isPrivate ? '開燈' : '關燈';
+      button.textContent = isPrivate ? `開燈 (÷${divisor})` : '關燈';
       button.setAttribute('aria-pressed', String(isPrivate));
+      button.title = isPrivate
+        ? `關燈中 — 所有金額除以 ${divisor}，把分母乘回去 = 真實值`
+        : '關燈：所有金額除以隨機 1-100，瀏覽器分頁標題會顯示當次倍數';
     });
     values.forEach((el) => {
       if (!el.dataset.publicText) el.dataset.publicText = el.textContent.trim();
-      el.textContent = isPrivate ? (el.dataset.privateText || '****') : el.dataset.publicText;
+      const original = el.dataset.publicText;
+      if (!isPrivate) {
+        el.textContent = original;
+        return;
+      }
+      const amount = parseAmount(original);
+      if (amount === null) {
+        el.textContent = el.dataset.privateText || '****';
+        return;
+      }
+      el.textContent = reformat(original, amount / divisor);
     });
+    const baseTitle = document.documentElement.dataset.titleOriginal;
+    document.title = isPrivate ? `[÷${divisor}] ${baseTitle}` : baseTitle;
   };
 
+  // page load 時若曾經是 關燈 狀態 → 也重新抽 divisor (避免穩定可預測)
   const initial = localStorage.getItem('ipv2.privacy') === 'on';
-  apply(initial);
+  apply(initial, initial ? pickDivisor() : 1);
+
   toggles.forEach((button) => {
     button.addEventListener('click', () => {
       const next = document.documentElement.dataset.privacy !== 'on';
       localStorage.setItem('ipv2.privacy', next ? 'on' : 'off');
-      apply(next);
+      apply(next, next ? pickDivisor() : 1);
     });
   });
 }
