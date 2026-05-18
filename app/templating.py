@@ -10,7 +10,11 @@ from typing import Any
 import markdown_it
 from fastapi.templating import Jinja2Templates
 
-_md = markdown_it.MarkdownIt("commonmark", {"breaks": True, "linkify": True})
+_md = (
+    markdown_it.MarkdownIt("commonmark", {"breaks": True})
+    .enable("table")
+    .enable("strikethrough")
+)
 
 _SYMBOLS = {
     "TWD": "NT$",
