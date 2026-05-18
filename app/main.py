@@ -66,21 +66,35 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         return response
 
 
-class CacheControlMiddleware(BaseHTTPMiddleware):
-    """Force `no-store` on dynamic responses.
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Cache-Control + Cross-Origin-Opener-Policy on dynamic responses.
 
-    Without this the browser heuristically caches authenticated HTML and the
-    `/` redirect (responses come back as `cache-control: private` with no
-    freshness directive). After login the user then sees a stale pre-auth
-    state until a hard refresh. Static assets under /static/ keep their own
-    caching so versioned JS/CSS still load from cache.
+    `Cache-Control: no-store` — without this the browser heuristically caches
+    authenticated HTML and the `/` redirect (responses come back as
+    `cache-control: private` with no freshness directive). After login the
+    user then sees a stale pre-auth state until a hard refresh.
+
+    `Cross-Origin-Opener-Policy: same-origin-allow-popups` — REQUIRED by Google
+    Identity Services (GIS) popup-based sign-in. Without this header, newer
+    Chrome blocks the GIS popup's postMessage callback to the opener, leaving
+    the popup stuck blank at `accounts.google.com/gsi/transform` and the
+    handleCredentialResponse callback never firing. With this value, popups
+    we opened can still communicate, while cross-origin pages are isolated.
+
+    Static assets under /static/ keep their own caching so versioned JS/CSS
+    still load from cache; security headers there are optional.
     """
 
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         if not request.url.path.startswith("/static/"):
             response.headers["Cache-Control"] = "no-store"
+            response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
         return response
+
+
+# Backwards-compatible alias (used in create_app + tests).
+CacheControlMiddleware = SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
