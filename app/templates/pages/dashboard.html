@@ -2,7 +2,9 @@
 {% block title %}{{ user.slug }} - 總覽{% endblock %}
 {% block content %}
 
-<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+{% include "components/recent_reports_card.html" %}
+
+<div class="mt-8 mb-6 flex flex-wrap items-end justify-between gap-4">
   <div>
     <div class="flex items-center gap-2">
       <p class="text-xs uppercase tracking-wide text-slate-500">總資產 (Net Worth)</p>
@@ -70,8 +72,6 @@
     {% include "components/breakdown_card.html" %}
   {% endwith %}
 </div>
-
-{% include "components/recent_reports_card.html" %}
 
 <div class="mt-8 rounded-lg bg-white p-4 shadow">
   <div class="mb-3 flex items-center justify-between">
